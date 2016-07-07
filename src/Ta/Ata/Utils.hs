@@ -31,3 +31,10 @@ acceptIn ata (Node a t1 t2) s = S.notNull
   . Map.foldr ExprAnd ExprTop
   . Map.filterWithKey (\(q,a') _ -> a == a' && q `S.member` s)
   . getTrans $ ata
+
+isTop :: Q q => Expr q -> Bool
+isTop (ExprOr e1 e2) = isTop e1 || isTop e2
+isTop (ExprAnd e1 e2) = isTop e1 && isTop e2
+isTop ExprTop = True
+isTop ExprBottom = False
+isTop (ExprCond _ _) = False
