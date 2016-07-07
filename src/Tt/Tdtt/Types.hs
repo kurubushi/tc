@@ -7,18 +7,18 @@ import Atom.Types
 import Set.Types
 import Data.Map (Map)
 
-data TdttExpr a p where
-  TdttExprA :: Alphabet a => a -> (TdttExpr a p, TdttExpr a p) -> TdttExpr a p
-  TdttExprL :: TdttExpr a p
-  TdttExprP :: Q p => p -> Int -> TdttExpr a p
-deriving instance (Alphabet a, Q p) => Eq (TdttExpr a p)
-deriving instance (Alphabet a, Q p) => Ord (TdttExpr a p)
-deriving instance (Show a, Show p) => Show (TdttExpr a p)
+data Expr a p where
+  ExprA :: Alphabet a => a -> (Expr a p, Expr a p) -> Expr a p
+  ExprL :: Expr a p
+  ExprP :: Q p => p -> Int -> Expr a p
+deriving instance (Alphabet a, Q p) => Eq (Expr a p)
+deriving instance (Alphabet a, Q p) => Ord (Expr a p)
+deriving instance (Show a, Show p) => Show (Expr a p)
 
-type TdttTrans a p s = Map (p, a) (s (TdttExpr a p))
+type Trans a p s = Map (p, a) (s (Expr a p))
 
 data Tdtt a p s = Tdtt {
     getPs    :: s p
   , getP0    :: s p
-  , getTrans :: TdttTrans a p s
+  , getTrans :: Trans a p s
 }
