@@ -4,6 +4,7 @@ import Atom.Types
 import Ta.Ata.Types
 import Set.Types (StateSet)
 import qualified Set.Types as S
+import qualified Set.Utils as S
 import qualified Data.Map as Map
 
 dnf :: (Q q, StateSet s, Ord (s q)) => Expr q -> s (s q, s q)
@@ -38,3 +39,12 @@ isTop (ExprAnd e1 e2) = isTop e1 && isTop e2
 isTop ExprTop = True
 isTop ExprBottom = False
 isTop (ExprCond _ _) = False
+
+isNotTop :: Q q => Expr q -> Bool
+isNotTop = not . isTop
+
+foldrExprOrWith :: (Foldable f, Q q) => (a -> Expr q) -> f a -> Expr q
+foldrExprOrWith f = foldr (\x acc -> f x `ExprOr` acc) ExprBottom
+
+foldrExprAndWith :: (Foldable f, Q q) => (a -> Expr q) -> f a -> Expr q
+foldrExprAndWith f = foldr (\x acc -> f x `ExprAnd` acc) ExprTop

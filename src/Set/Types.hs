@@ -2,28 +2,27 @@ module Set.Types where
 
 import qualified Prelude
 import Prelude hiding (
-  null, filter, foldr, map)
+  null, filter, map)
 import qualified Data.Set as S
 import qualified Data.List as L
 
 class Foldable s => StateSet s where
   empty :: s a
-  null :: Ord a => s a -> Bool
+  null :: s a -> Bool
   null = not . notNull
-  notNull :: Ord a => s a -> Bool
+  notNull :: s a -> Bool
   notNull = not . null
   union :: Ord a => s a -> s a -> s a
   member :: Ord a => a -> s a -> Bool
   isSubsetOf :: Ord a => s a -> s a -> Bool
   intersection :: Ord a => s a -> s a -> s a
   difference :: Ord a => s a -> s a -> s a
-  cartesian :: (Ord a, Ord b) => s a -> s b -> s (a,b)
-  map :: (Ord a, Ord b) => (a -> b) -> s a -> s b
-  filter :: (Ord a) => (a -> Bool) -> s a -> s a
-  foldr :: (Ord a) => (a -> b -> b) -> b -> s a -> b
+  cartesian :: s a -> s b -> s (a,b)
+  map :: Ord b => (a -> b) -> s a -> s b
+  filter :: (a -> Bool) -> s a -> s a
   powerset :: Ord a => s a -> s (s a)
   fromList :: Ord a => [a] -> s a
-  toList :: Ord a => s a -> [a]
+  toList :: s a -> [a]
 
 instance StateSet S.Set where
   empty = S.empty
@@ -33,12 +32,11 @@ instance StateSet S.Set where
   isSubsetOf = S.isSubsetOf
   intersection = S.intersection
   difference = S.difference
-  cartesian xs ys = S.fromDistinctAscList
+  cartesian xs ys = S.fromDistinctAscList -- is safe
     [(x, y) | x <- S.toAscList xs, y <- S.toAscList ys]
   map = S.map
   filter = S.filter
-  foldr = S.foldr
-  powerset = S.fromList . map S.fromList . powerset . S.toList
+  powerset = S.fromList . map S.fromList . powerset . S.toAscList
   fromList = S.fromList
   toList = S.toList
 
@@ -53,7 +51,6 @@ instance StateSet [] where
   cartesian xs ys = [(x, y) | x <- xs, y <- ys]
   map = Prelude.map
   filter = Prelude.filter
-  foldr = Prelude.foldr
   powerset = L.subsequences
   fromList = id
   toList = id
