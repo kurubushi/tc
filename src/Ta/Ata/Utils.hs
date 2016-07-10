@@ -65,7 +65,7 @@ toNd as ata = Nd.Nd {
       . S.cartesian qs $ as
 }
   where
-    qs = S.powerset . getQs $ ata
+    qs = S.filter S.notNull . S.powerset . getQs $ ata
     makeSubs (s,a) = ((s,a),) . S.map Nd.Expr . dnf 
       . foldrExprAndWith (\q -> Map.findWithDefault ExprBottom (q,a) (getTrans ata))
       . S.filter (`S.member` s)
