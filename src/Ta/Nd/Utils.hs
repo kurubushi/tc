@@ -42,3 +42,20 @@ intersection nd1 nd2 = Nd {
       . getTrans
     mix :: ((a,a),(b,b)) -> ((a,b),(a,b))
     mix ((x1,x2),(y1,y2)) = ((x1,y1),(x2,y2))
+
+
+isEmpty :: (Alphabet a, Q q, StateSet s, Eq (s q)) => Nd a q s -> Bool
+isEmpty nd = isEmptyWithQne nd $ getFs nd
+
+isEmptyWithQne :: (Alphabet a, Q q, StateSet s, Eq (s q)) => Nd a q s -> s q -> Bool
+isEmptyWithQne nd qne
+  | qne == qne' = S.null (qne `S.intersection` getIs nd)
+  | otherwise   = isEmptyWithQne nd qne'
+  where
+    qne' = qne `S.union` newQs
+    newQs = S.fromList
+      . map fst
+      . Map.keys
+      . Map.filter (S.notNull . S.filter 
+          (\(Expr (q1,q2)) -> (q1 `S.member` qne) && q2 `S.member` qne))
+      . getTrans $ nd
