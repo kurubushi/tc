@@ -1,8 +1,12 @@
+{-#LANGUAGE TupleSections #-}
+
 module Ta.Ata.Utils where
 
 import Atom.Types
 import Ta.Ata.Types
 import Set.Types (StateSet)
+import qualified Ta.Nd.Types as Nd
+import qualified Ta.Nd.Utils as Nd
 import qualified Set.Types as S
 import qualified Set.Utils as S
 import qualified Data.Map as Map
@@ -48,3 +52,21 @@ foldrExprOrWith f = foldr (\x acc -> f x `ExprOr` acc) ExprBottom
 
 foldrExprAndWith :: (Foldable f, Q q) => (a -> Expr q) -> f a -> Expr q
 foldrExprAndWith f = foldr (\x acc -> f x `ExprAnd` acc) ExprTop
+
+
+toNd :: (Alphabet a, Q q, StateSet s, Q (s q)) => s a -> Ata a q s -> Nd.Nd a (s q) s
+toNd as ata = Nd.Nd {
+    Nd.getQs = qs
+  , Nd.getIs = S.map (\q -> S.fromList [q]) (getIs ata)
+  , Nd.getFs = S.filter (\s -> s `S.isSubsetOf` getFs ata) qs
+--  , Nd.getFs = S.filter (\s -> S.notNull s && s `S.isSubsetOf` getFs ata) qs
+  , Nd.getTrans = S.toMap . map makeSubs -- Ord is too restrict
+      . S.toList
+      . S.cartesian qs $ as
+}
+  where
+    qs = S.powerset . getQs $ ata
+    makeSubs (s,a) = ((s,a),) . S.map Nd.Expr . dnf 
+      . foldrExprAndWith (\q -> Map.findWithDefault ExprBottom (q,a) (getTrans ata))
+      . S.filter (`S.member` s)
+      . getQs $ ata
