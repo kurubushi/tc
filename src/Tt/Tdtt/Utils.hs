@@ -55,3 +55,13 @@ infer as tdtt nd = Ata {
   where
     ndc = Nd.complement nd
     qs = S.cartesian (getPs tdtt) (Nd.getQs ndc)
+
+
+typecheck :: (Eq (s (q1, s (p, q2))), StateSet s,
+  Q p, Q q1, Q q2, Q (s (p, q2)), Alphabet a) =>
+  s a -> Nd.Nd a q1 s -> Nd.Nd a q2 s -> Tdtt a p s -> Bool
+typecheck as inputNd outputNd tdtt = Nd.isEmpty testNd
+  where
+    inferAta = infer as tdtt outputNd
+    inferNd = Ata.toNd as inferAta
+    testNd = inputNd `Nd.intersection` inferNd
