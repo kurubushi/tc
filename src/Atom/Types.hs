@@ -9,6 +9,12 @@ import qualified Data.Map as Map
 data Alphabet = Alphabet Integer | AlphabetEnd
   deriving (Eq, Ord, Show)
 
+makeAlphabet :: Integral a => a -> Alphabet
+makeAlphabet = Alphabet . toInteger
+
+endAlphabet :: Alphabet
+endAlphabet = AlphabetEnd
+
 isEnd :: Alphabet -> Bool
 isEnd AlphabetEnd = True
 isEnd _           = False
