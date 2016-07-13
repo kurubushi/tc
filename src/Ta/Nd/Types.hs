@@ -1,22 +1,19 @@
 {-#LANGUAGE GADTs #-}
-{-# LANGUAGE StandaloneDeriving #-}
 
 module Ta.Nd.Types where
 
 import Atom.Types
 import Data.Map.Lazy (Map)
 
-data Expr q where
-  Expr :: Q q => (q, q) -> Expr q
-deriving instance (Q q) => Eq (Expr q)
-deriving instance (Q q) => Ord (Expr q)
-deriving instance (Show q) => Show (Expr q)
+data Expr where
+  Expr :: (Q, Q) -> Expr
+  deriving (Eq, Ord, Show)
 
-type Trans a q s = Map (q, a) (s (Expr q))
+type Trans s = Map (Q, Alphabet) (s Expr)
 
-data Nd a q s = Nd {
-    getQs    :: s q
-  , getIs    :: s q
-  , getFs    :: s q
-  , getTrans :: Trans a q s
+data Nd s = Nd {
+    getQs    :: s Q
+  , getIs    :: s Q
+  , getFs    :: s Q
+  , getTrans :: Trans s
 }

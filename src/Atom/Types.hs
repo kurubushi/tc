@@ -2,10 +2,11 @@
 
 module Atom.Types where
 
-import qualified Data.Set as S
-import Data.Semigroup
+import Set.Types (StateSet)
+import qualified Set.Types as S
+import qualified Data.Map as Map
 
-data Alphabet = Alphabet Int | AlphabetEnd
+data Alphabet = Alphabet Integer | AlphabetEnd
   deriving (Eq, Ord, Show)
 
 isEnd :: Alphabet -> Bool
@@ -16,18 +17,22 @@ isNotEnd :: Alphabet -> Bool
 isNotEnd = not . isEnd
 
 
-data Q = Q {
-    qid   :: Int -- count up from 0
-  , qsize :: Int -- qsize = length of Data.Set Q = max + 1
-} deriving (Eq, Ord, Show)
+data Q = Q Integer -- count up from 0
+  deriving (Eq, Ord, Show)
 
-instance Semigroup Q where
-  q1 <> q2 = makeQ newSize newQ
-    where newSize = qsize q1 * qsize q2
-          newQ    = qid q2 * qsize q1 + qid q2
+makeQ :: Integral a => a -> Q
+makeQ = Q . toInteger
 
-makeQ :: Int -> Int -> Q
-makeQ n q = Q {qid = q, qsize = n} -- n > q
+convert :: Ord a => [a] -> (a -> Maybe Q)
+convert as = fmap makeQ
+  . flip Map.lookup (Map.fromList . zip as $ [0..])
+
+unsafeConver :: Ord a => [a] -> (a -> Q)
+unsafeConver as = makeQ -- a belongs to as
+  . (Map.!) (Map.fromList . zip as $ [0..])
+
+takeNewQ :: StateSet s => s Q -> Q
+takeNewQ = makeQ . S.size
 
 
 data BTree a where
