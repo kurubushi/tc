@@ -23,13 +23,16 @@ data Q = Q Integer -- count up from 0
 makeQ :: Integral a => a -> Q
 makeQ = Q . toInteger
 
-convert :: Ord a => [a] -> (a -> Maybe Q)
-convert as = fmap makeQ
-  . flip Map.lookup (Map.fromList . zip as $ [0..])
+convertQs :: (StateSet s, Ord a) => s a -> s Q
+convertQs qs = S.map makeQ $ S.fromList [0..(S.size qs)]
 
-unsafeConver :: Ord a => [a] -> (a -> Q)
-unsafeConver as = makeQ -- a belongs to as
-  . (Map.!) (Map.fromList . zip as $ [0..])
+convertMap :: (StateSet s, Ord a) => s a -> (a -> Maybe Q)
+convertMap qs = fmap makeQ
+  . flip Map.lookup (Map.fromList . zip (S.toList qs) $ [0..])
+
+unsafeConverMap :: (StateSet s, Ord a) => s a -> (a -> Q)
+unsafeConverMap qs = makeQ -- q belongs to qs
+  . (Map.!) (Map.fromList . zip (S.toList qs) $ [0..])
 
 takeNewQ :: StateSet s => s Q -> Q
 takeNewQ = makeQ . S.size

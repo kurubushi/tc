@@ -19,29 +19,32 @@ complement nd = Nd {
 
 
 intersection :: StateSet s => Nd s -> Nd s -> Nd s
-intersection = undefined
---intersection nd1 nd2 = Nd {
---    getQs = S.cartesian (getQs nd1) (getQs nd2)
---  , getIs = S.cartesian (getIs nd1) (getIs nd2)
---  , getFs = S.cartesian (getFs nd1) (getFs nd2)
---  , getTrans = Map.fromList
---      . map (\((q,p),a) -> (((q,p),a),) 
---        . S.map (Expr . mix)
---        $ S.cartesian (relA (q,a) nd1) (relA (p,a) nd2))
---      . S.toList
---      . S.cartesian qs $ as
---}
---  where
---    qs = S.cartesian (getQs nd1) (getQs nd2)
---    as = S.map snd keys1 `S.intersection` S.map snd keys2
---    keys1 = S.fromList . Map.keys . getTrans $ nd1
---    keys2 = S.fromList . Map.keys . getTrans $ nd2
---    relA :: (Alphabet a, Q q, StateSet s) => (q,a) -> Nd a q s -> s (q,q)
---    relA key = S.map (\(Expr qpair) -> qpair)
---      . Map.findWithDefault S.empty key
---      . getTrans
---    mix :: ((a,a),(b,b)) -> ((a,b),(a,b))
---    mix ((x1,x2),(y1,y2)) = ((x1,y1),(x2,y2))
+intersection nd1 nd2 = Nd {
+    getQs = S.map conv qs
+  , getIs = S.map conv is
+  , getFs = S.map conv fs
+  , getTrans = Map.fromList
+      . map (\((q,p),a) -> ((conv (q,p),a),) 
+        . S.map (Expr . convPair . mix)
+        $ S.cartesian (relA (q,a) nd1) (relA (p,a) nd2))
+      . S.toList
+      . S.cartesian qs $ as
+}
+  where
+    conv = unsafeConverMap qs
+    qs = S.cartesian (getQs nd1) (getQs nd2)
+    is = S.cartesian (getIs nd1) (getIs nd2)
+    fs = S.cartesian (getFs nd1) (getFs nd2)
+    as = S.map snd keys1 `S.intersection` S.map snd keys2
+    keys1 = S.fromList . Map.keys . getTrans $ nd1
+    keys2 = S.fromList . Map.keys . getTrans $ nd2
+    relA :: StateSet s => (Q,Alphabet) -> Nd s -> s (Q,Q)
+    relA key = S.map (\(Expr qpair) -> qpair)
+      . Map.findWithDefault S.empty key
+      . getTrans
+    mix :: ((a,a),(b,b)) -> ((a,b),(a,b))
+    mix ((x1,x2),(y1,y2)) = ((x1,y1),(x2,y2))
+    convPair (x,y) = (conv x, conv y)
 
 
 isEmpty :: (StateSet s, Eq (s Q)) => Nd s -> Bool

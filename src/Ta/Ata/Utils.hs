@@ -55,19 +55,22 @@ foldrExprAndWith f = foldr (\x acc -> f x `ExprAnd` acc) ExprTop
 
 
 toNd :: (StateSet s, Ord (s Q)) => s Alphabet -> Ata s -> Nd.Nd s
-toNd = undefined
---toNd as ata = Nd.Nd {
---    Nd.getQs = qs
---  , Nd.getIs = S.map (\q -> S.fromList [q]) (getIs ata)
---  , Nd.getFs = S.filter (\s -> s `S.isSubsetOf` getFs ata) qs
-----  , Nd.getFs = S.filter (\s -> S.notNull s && s `S.isSubsetOf` getFs ata) qs
---  , Nd.getTrans = S.toMap . map makeSubs -- Ord is too restrict
---      . S.toList
---      . S.cartesian qs $ as
---}
---  where
---    qs = S.filter S.notNull . powersetQs . getQs $ ata
---    makeSubs (s,a) = ((s,a),) . S.map Nd.Expr . dnf 
---      . foldrExprAndWith (\q -> Map.findWithDefault ExprBottom (q,a) (getTrans ata))
---      . S.filter (`S.member` s)
---      . getQs $ ata
+toNd as ata = Nd.Nd {
+    Nd.getQs = S.map conv qs
+  , Nd.getIs = S.map conv is
+  , Nd.getFs = S.map conv fs
+--  , Nd.getFs = S.filter (\s -> S.notNull s && s `S.isSubsetOf` getFs ata) qs
+  , Nd.getTrans = S.toMap . map makeSubs -- Ord is too restrict
+      . S.toList
+      . S.cartesian qs $ as
+}
+  where
+    conv = unsafeConverMap qs
+    convPair (x,y) = (conv x, conv y)
+    qs = S.filter S.notNull . S.powerset . getQs $ ata
+    is = S.map (\q -> S.fromList [q]) (getIs ata)
+    fs = S.filter (\s -> s `S.isSubsetOf` getFs ata) qs
+    makeSubs (s,a) = ((conv s,a),) . S.map (Nd.Expr . convPair) . dnf 
+      . foldrExprAndWith (\q -> Map.findWithDefault ExprBottom (q,a) (getTrans ata))
+      . S.filter (`S.member` s)
+      . getQs $ ata
