@@ -12,53 +12,46 @@ import qualified Set.Utils as S
 import qualified Data.Map as Map
 
 dnf :: (StateSet s, Ord (s Q)) => Expr -> s (s Q, s Q)
-dnf = undefined
---dnf ExprTop = S.fromList [(S.empty, S.empty)]
---dnf ExprBottom = S.empty
---dnf (ExprAnd e1 e2) = S.fromList [(s1 `S.union` s1', s2 `S.union` s2')
---    | (s1,s2) <- S.toList (dnf e1), (s1',s2') <- S.toList (dnf e2)]
---dnf (ExprOr e1 e2) = dnf e1 `S.union` dnf e2
---dnf (ExprCond 1 q) = S.fromList [(S.fromList [q], S.empty)]
---dnf (ExprCond 2 q) = S.fromList [(S.empty, S.fromList [q])]
+dnf ExprTop = S.fromList [(S.empty, S.empty)]
+dnf ExprBottom = S.empty
+dnf (ExprAnd e1 e2) = S.fromList [(s1 `S.union` s1', s2 `S.union` s2')
+    | (s1,s2) <- S.toList (dnf e1), (s1',s2') <- S.toList (dnf e2)]
+dnf (ExprOr e1 e2) = dnf e1 `S.union` dnf e2
+dnf (ExprCond 1 q) = S.fromList [(S.fromList [q], S.empty)]
+dnf (ExprCond 2 q) = S.fromList [(S.empty, S.fromList [q])]
 
 accept :: (StateSet s, Ord (s Q)) =>
   Ata s -> BTree Alphabet -> Bool
-accept = undefined
---accept ata t = S.notNull
---  . S.filter (\q -> acceptIn ata t (S.fromList [q]))
---  . getIs $ ata
+accept ata t = S.notNull
+  . S.filter (\q -> acceptIn ata t (S.fromList [q]))
+  . getIs $ ata
 
 acceptIn :: (StateSet s, Ord (s Q)) =>
   Ata s -> BTree Alphabet -> s Q -> Bool
-acceptIn = undefined
---acceptIn ata BTEnd s = s `S.isSubsetOf` getFs ata
---acceptIn ata (BTNode a t1 t2) s = S.notNull
---  . S.filter (\(s1,s2) -> S.notNull s1 && S.notNull s2
---      && acceptIn ata t1 s1 && acceptIn ata t2 s2)
---  . dnf 
---  . Map.foldr ExprAnd ExprTop
---  . Map.filterWithKey (\(q,a') _ -> a == a' && q `S.member` s)
---  . getTrans $ ata
+acceptIn ata BTEnd s = s `S.isSubsetOf` getFs ata
+acceptIn ata (BTNode a t1 t2) s = S.notNull
+  . S.filter (\(s1,s2) -> S.notNull s1 && S.notNull s2
+      && acceptIn ata t1 s1 && acceptIn ata t2 s2)
+  . dnf 
+  . Map.foldr ExprAnd ExprTop
+  . Map.filterWithKey (\(q,a') _ -> a == a' && q `S.member` s)
+  . getTrans $ ata
 
 isTop :: Expr -> Bool
-isTop = undefined
---isTop (ExprOr e1 e2) = isTop e1 || isTop e2
---isTop (ExprAnd e1 e2) = isTop e1 && isTop e2
---isTop ExprTop = True
---isTop ExprBottom = False
---isTop (ExprCond _ _) = False
+isTop (ExprOr e1 e2) = isTop e1 || isTop e2
+isTop (ExprAnd e1 e2) = isTop e1 && isTop e2
+isTop ExprTop = True
+isTop ExprBottom = False
+isTop (ExprCond _ _) = False
 
 isNotTop :: Expr -> Bool
-isNotTop = undefined
---isNotTop = not . isTop
+isNotTop = not . isTop
 
 foldrExprOrWith :: Foldable f => (a -> Expr) -> f a -> Expr
-foldrExprOrWith = undefined
---foldrExprOrWith f = foldr (\x acc -> f x `ExprOr` acc) ExprBottom
+foldrExprOrWith f = foldr (\x acc -> f x `ExprOr` acc) ExprBottom
 
 foldrExprAndWith :: Foldable f => (a -> Expr) -> f a -> Expr
-foldrExprAndWith = undefined
---foldrExprAndWith f = foldr (\x acc -> f x `ExprAnd` acc) ExprTop
+foldrExprAndWith f = foldr (\x acc -> f x `ExprAnd` acc) ExprTop
 
 
 toNd :: (StateSet s, Ord (s Q)) => s Alphabet -> Ata s -> Nd.Nd s

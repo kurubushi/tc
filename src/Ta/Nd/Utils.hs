@@ -10,13 +10,12 @@ import qualified Set.Utils as S
 import qualified Data.Map as Map
 
 complement :: StateSet s => Nd s -> Nd s
-complement = undefined
---complement nd = Nd {
---    getQs    = getQs nd
---  , getIs    = S.difference (getQs nd) (getIs nd)
---  , getFs    = getFs nd
---  , getTrans = getTrans nd
---}
+complement nd = Nd {
+    getQs    = getQs nd
+  , getIs    = S.difference (getQs nd) (getIs nd)
+  , getFs    = getFs nd
+  , getTrans = getTrans nd
+}
 
 
 intersection :: StateSet s => Nd s -> Nd s -> Nd s
@@ -46,19 +45,17 @@ intersection = undefined
 
 
 isEmpty :: (StateSet s, Eq (s Q)) => Nd s -> Bool
-isEmpty = undefined
---isEmpty nd = isEmptyWithQne nd $ getFs nd
+isEmpty nd = isEmptyWithQne nd $ getFs nd
 
 isEmptyWithQne :: (StateSet s, Eq (s Q)) => Nd s -> s Q -> Bool
-isEmptyWithQne = undefined
---isEmptyWithQne nd qne
---  | qne == qne' = S.null (qne `S.intersection` getIs nd)
---  | otherwise   = isEmptyWithQne nd qne'
---  where
---    qne' = qne `S.union` newQs
---    newQs = S.fromList
---      . map fst
---      . Map.keys
---      . Map.filter (S.notNull . S.filter 
---          (\(Expr (q1,q2)) -> (q1 `S.member` qne) && q2 `S.member` qne))
---      . getTrans $ nd
+isEmptyWithQne nd qne
+  | qne == qne' = S.null (qne `S.intersection` getIs nd)
+  | otherwise   = isEmptyWithQne nd qne'
+  where
+    qne' = qne `S.union` newQs
+    newQs = S.fromList
+      . map fst
+      . Map.keys
+      . Map.filter (S.notNull . S.filter 
+          (\(Expr (q1,q2)) -> (q1 `S.member` qne) && q2 `S.member` qne))
+      . getTrans $ nd
