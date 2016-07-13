@@ -36,8 +36,8 @@ convertMap :: (StateSet s, Ord a) => s a -> (a -> Maybe Q)
 convertMap qs = fmap makeQ
   . flip Map.lookup (Map.fromList . zip (S.toList qs) $ [0..])
 
-unsafeConverMap :: (StateSet s, Ord a) => s a -> (a -> Q)
-unsafeConverMap qs = makeQ -- q belongs to qs
+unsafeConvertMap :: (StateSet s, Ord a) => s a -> (a -> Q)
+unsafeConvertMap qs = makeQ -- q belongs to qs
   . (Map.!) (Map.fromList . zip (S.toList qs) $ [0..])
 
 takeNewQ :: StateSet s => s Q -> Q

@@ -31,7 +31,7 @@ intersection nd1 nd2 = Nd {
       . S.cartesian qs $ as
 }
   where
-    conv = unsafeConverMap qs
+    conv = unsafeConvertMap qs
     qs = S.cartesian (getQs nd1) (getQs nd2)
     is = S.cartesian (getIs nd1) (getIs nd2)
     fs = S.cartesian (getFs nd1) (getFs nd2)

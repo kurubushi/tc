@@ -65,7 +65,7 @@ toNd as ata = Nd.Nd {
       . S.cartesian qs $ as
 }
   where
-    conv = unsafeConverMap qs
+    conv = unsafeConvertMap qs
     convPair (x,y) = (conv x, conv y)
     qs = S.filter S.notNull . S.powerset . getQs $ ata
     is = S.map (\q -> S.fromList [q]) (getIs ata)

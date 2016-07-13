@@ -52,7 +52,7 @@ infer as tdtt nd = Ata {
       . S.cartesian qs $ as
 }
   where
-    conv = unsafeConverMap qs
+    conv = unsafeConvertMap qs
     qs = S.cartesian (getPs tdtt) (Nd.getQs ndc)
     is = S.cartesian (getP0 tdtt) (Nd.getIs ndc)
     ndc = Nd.complement nd
