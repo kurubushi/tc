@@ -2,12 +2,17 @@
 
 module Set.Utils where
 
-import Set.Types
+import Set.Types (StateSet)
+import qualified Set.Types as S
 import Data.Map (Map)
 import qualified Data.Map as Map
 
 toMap :: (StateSet s, Ord k) => s (k,v) -> Map k v
-toMap = Map.fromList . toList
+toMap = Map.fromList . S.toList
+
+toMapfoldr :: (StateSet s, Ord k) =>
+  (v' -> v' -> v') -> (v -> v') -> s (k,v) -> Map k v'
+toMapfoldr f g = Map.fromListWith f . map (fmap g) . S.toList
 
 fromMap :: (StateSet s, Ord (k,v)) => Map k v -> s (k,v)
-fromMap = fromList . Map.toAscList
+fromMap = S.fromList . Map.toAscList
