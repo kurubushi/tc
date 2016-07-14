@@ -55,7 +55,7 @@ infer as tdtt nd = Ata {
     conv = unsafeConvertMap qs
     qs = S.cartesian (getPs tdtt) (Nd.getQs ndc)
     is = S.cartesian (getP0 tdtt) (Nd.getIs ndc)
-    ndc = Nd.complement nd
+    ndc = Nd.complement . Nd.complete as $ nd
 
 
 typecheck :: (Ord (s Q), StateSet s) =>

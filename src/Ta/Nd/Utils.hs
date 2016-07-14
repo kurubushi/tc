@@ -9,6 +9,26 @@ import qualified Set.Types as S
 import qualified Set.Utils as S
 import qualified Data.Map as Map
 
+complete :: StateSet s => s Alphabet -> Nd s -> Nd s
+complete as nd
+  | S.null unDefines = nd
+  | otherwise = Nd {
+      getQs = qs
+    , getIs = getIs nd
+    , getFs = getFs nd
+    , getTrans = getTrans nd `Map.union` addedTrans
+  }
+  where
+    dummyQ = takeNewQ (getQs nd)
+    qs = getQs nd `S.union` S.fromList [dummyQ]
+    addedTrans = S.toMapfoldr S.union (\e -> S.fromList [e]). S.map (\(a,e) -> ((dummyQ,a), e)) $ unDefines
+    unDefines = allCombis `S.difference` defines
+    allCombis = as `S.cartesian` S.map Expr (qs `S.cartesian` qs)
+    defines = -- :: s (Alphabet,Expr)
+      Map.foldrWithKey (\(q,a) es acc -> S.map (a,) es `S.union` acc) S.empty
+      . getTrans $ nd
+
+
 complement :: StateSet s => Nd s -> Nd s
 complement nd = Nd {
     getQs    = getQs nd
