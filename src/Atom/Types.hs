@@ -5,6 +5,8 @@ module Atom.Types where
 import Set.Types (StateSet)
 import qualified Set.Types as S
 import qualified Data.Map as Map
+import Control.Monad.Free (Free(..))
+import Data.Void (Void)
 
 data Alphabet = Alphabet Integer | AlphabetEnd
   deriving (Eq, Ord, Show)
@@ -45,6 +47,30 @@ takeNewQ :: StateSet s => s Q -> Q
 takeNewQ = makeQ . S.size -- (qs :: s Q) `S.union` (S.fromList [takeNewQ]) <= OK
 
 
-data BTree a where
-  BTNode :: a -> BTree a -> BTree a -> BTree a
-  BTEnd :: BTree a
+data BTree' a x where
+  BTEnd'  :: BTree' a x
+  BTNode' :: a -> x -> x -> BTree' a x
+  deriving (Eq, Ord, Show)
+
+type BTree a = Free (BTree' a) Void
+
+btEnd :: BTree a
+btEnd = Free BTEnd'
+
+makeNode :: a -> BTree a -> BTree a -> BTree a
+makeNode x t1 t2 = Free $ BTNode' x t1 t2
+
+isBTEnd :: BTree a -> Bool
+isBTEnd (Free BTEnd') = True
+isBTEnd _             = True
+
+isNotBTEnd :: BTree a -> Bool
+isNotBTEnd = not . isBTEnd
+
+getElems :: BTree a -> Maybe (a, BTree a, BTree a)
+getElems (Free (BTNode' x t1 t2)) = Just (x, t1, t2)
+getElems _                        = Nothing
+
+-- tree must not be End.
+unsafeGetElems :: BTree a -> (a, BTree a, BTree a)
+unsafeGetElems (Free (BTNode' x t1 t2)) = (x, t1, t2)

@@ -28,14 +28,16 @@ accept ata t = S.notNull
 
 acceptIn :: (StateSet s, Ord (s Q)) =>
   Ata s -> BTree Alphabet -> s Q -> Bool
-acceptIn ata BTEnd s = s `S.isSubsetOf` getFs ata
-acceptIn ata (BTNode a t1 t2) s = S.notNull
-  . S.filter (\(s1,s2) -> S.notNull s1 && S.notNull s2
-      && acceptIn ata t1 s1 && acceptIn ata t2 s2)
-  . dnf 
-  . Map.foldr ExprAnd ExprTop
-  . Map.filterWithKey (\(q,a') _ -> a == a' && q `S.member` s)
-  . getTrans $ ata
+acceptIn ata t s
+  | isBTEnd t = s `S.isSubsetOf` getFs ata
+  | otherwise = let (a,t1,t2) = unsafeGetElems t in -- t is not End
+      S.notNull
+      . S.filter (\(s1,s2) -> S.notNull s1 && S.notNull s2
+          && acceptIn ata t1 s1 && acceptIn ata t2 s2)
+      . dnf 
+      . Map.foldr ExprAnd ExprTop
+      . Map.filterWithKey (\(q,a') _ -> a == a' && q `S.member` s)
+      . getTrans $ ata
 
 isTop :: Expr -> Bool
 isTop (ExprOr e1 e2) = isTop e1 || isTop e2
