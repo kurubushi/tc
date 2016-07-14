@@ -29,7 +29,7 @@ complete as nd
       . getTrans $ nd
 
 
-complement :: StateSet s => Nd s -> Nd s
+complement :: StateSet s => s Alphabet -> Nd s -> Nd s
 complement as nd = Nd {
     getQs    = getQs nd'
   , getIs    = S.difference (getQs nd') (getIs nd')
