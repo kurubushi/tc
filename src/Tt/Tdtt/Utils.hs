@@ -18,48 +18,48 @@ import qualified Ta.Nd.Types as Nd
 import qualified Ta.Nd.Utils as Nd
 import Data.Maybe (fromMaybe)
 
-inf :: (Alphabet a, Q q, Q p, StateSet s) =>
-  Nd a q s -> Expr a p -> q -> Ata.Expr (p,q)
-inf nd ExprL q
+inf :: StateSet s => Nd s -> ((Q,Q) -> Q) -> Expr -> Q -> Ata.Expr
+inf nd conv ExprL q
   | q `S.member` Nd.getFs nd = Ata.ExprTop
   | otherwise = Ata.ExprBottom
-inf nd (ExprA a (e1,e2)) q =
+inf nd conv (ExprA a (e1,e2)) q =
   maybe Ata.ExprBottom (Ata.foldrExprOrWith infAndinf)
   . Map.lookup (q, a)
   . Nd.getTrans $ nd
   where
-    infAndinf (Nd.Expr (q1,q2)) = inf nd e1 q1 `Ata.ExprAnd` inf nd e2 q2
-inf nd (ExprP p n) q = Ata.ExprCond n (p,q)
+    infAndinf (Nd.Expr (q1,q2)) = inf nd conv e1 q1 `Ata.ExprAnd` inf nd conv e2 q2
+inf nd conv (ExprP p n) q = Ata.ExprCond n (conv (p,q))
 
 
-infer :: (Alphabet a, Q q, Q p, StateSet s) =>
-  s a -> Tdtt a p s -> Nd a q s -> Ata a (p,q) s
+infer :: StateSet s => s Alphabet -> Tdtt s -> Nd s -> Ata s
 infer as tdtt nd = Ata {
-    Ata.getQs = qs
-  , Ata.getIs = S.cartesian (getP0 tdtt) (Nd.getIs ndc)
-  , Ata.getFs = S.fromList -- using List becase s (Expr a q) is not Ord.
+    Ata.getQs = S.map conv qs
+  , Ata.getIs = S.map conv is
+  , Ata.getFs = S.map conv
+      . S.fromList -- using List becase s (Expr a q) is not Ord.
       . map (\(q,((p,_),_)) -> (p,q))
       . filter (\(q,(_,es)) -> Ata.isTop
-          . Ata.foldrExprOrWith (\e -> inf nd e q) $ es)
+          . Ata.foldrExprOrWith (\e -> inf nd conv e q) $ es)
       . S.cartesian (S.toList . Nd.getQs $ ndc) -- :: [(q, ((p,a), s (Expr a p)))]
       . Map.toList -- :: [((p,a), s (Expr a p))]
-      . Map.filterWithKey (\(_,a) _ -> a==end)
+      . Map.filterWithKey (\(_,a) _ -> isEnd a)
       . Tdtt.getTrans $ tdtt
   , Ata.getTrans = S.toMap
-      . S.map (\((p,q),a) -> (((p,q),a),)
-          . Ata.foldrExprOrWith (Ata.foldrExprOrWith (\e -> inf nd e q))
-          . Map.filterWithKey (\(p',a') _ -> p'==p && a'==a && a'/=end)
+      . S.map (\((p,q),a) -> ((conv (p,q),a),)
+          . Ata.foldrExprOrWith (Ata.foldrExprOrWith (\e -> inf nd conv e q))
+          . Map.filterWithKey (\(p',a') _ -> isNotEnd a' && p'==p && a'==a)
           . Tdtt.getTrans $ tdtt)
       . S.cartesian qs $ as
 }
   where
-    ndc = Nd.complement nd
+    conv = unsafeConvertMap qs
     qs = S.cartesian (getPs tdtt) (Nd.getQs ndc)
+    is = S.cartesian (getP0 tdtt) (Nd.getIs ndc)
+    ndc = Nd.complement nd
 
 
-typecheck :: (Eq (s (q1, s (p, q2))), StateSet s,
-  Q p, Q q1, Q q2, Q (s (p, q2)), Alphabet a) =>
-  s a -> Nd.Nd a q1 s -> Nd.Nd a q2 s -> Tdtt a p s -> Bool
+typecheck :: (Ord (s Q), StateSet s) =>
+  s Alphabet -> Nd s -> Nd s -> Tdtt s -> Bool
 typecheck as inputNd outputNd tdtt = Nd.isEmpty testNd
   where
     inferAta = infer as tdtt outputNd

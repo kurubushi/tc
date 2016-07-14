@@ -12,6 +12,7 @@ class Foldable s => StateSet s where
   null = not . notNull
   notNull :: s a -> Bool
   notNull = not . null
+  size :: s a -> Int
   union :: Ord a => s a -> s a -> s a
   member :: Ord a => a -> s a -> Bool
   isSubsetOf :: Ord a => s a -> s a -> Bool
@@ -27,6 +28,7 @@ class Foldable s => StateSet s where
 instance StateSet S.Set where
   empty = S.empty
   null = S.null
+  size = S.size
   union = S.union
   member = S.member
   isSubsetOf = S.isSubsetOf
@@ -43,6 +45,7 @@ instance StateSet S.Set where
 instance StateSet [] where
   empty = []
   null = Prelude.null
+  size = length
   union = (++)
   member = elem
   isSubsetOf xs ys = xs `member` powerset ys
