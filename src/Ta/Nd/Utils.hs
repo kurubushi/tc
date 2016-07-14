@@ -30,12 +30,13 @@ complete as nd
 
 
 complement :: StateSet s => Nd s -> Nd s
-complement nd = Nd {
-    getQs    = getQs nd
-  , getIs    = S.difference (getQs nd) (getIs nd)
-  , getFs    = getFs nd
-  , getTrans = getTrans nd
+complement as nd = Nd {
+    getQs    = getQs nd'
+  , getIs    = S.difference (getQs nd') (getIs nd')
+  , getFs    = getFs nd'
+  , getTrans = getTrans nd'
 }
+  where nd' = complete as nd
 
 
 intersection :: StateSet s => Nd s -> Nd s -> Nd s
