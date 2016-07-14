@@ -82,7 +82,7 @@ tdtt_1132 = Tdtt.Tdtt {
   , Tdtt.getTrans = tdttt_1132
 }
 
-nd_1132 = Nd.Nd {
+nd_1132' = Nd.Nd {
     Nd.getQs = S.fromList [makeQ 0, makeQ 1]
   , Nd.getIs = S.fromList [makeQ 1]
   , Nd.getFs = S.fromList [makeQ 1]
@@ -91,4 +91,12 @@ nd_1132 = Nd.Nd {
       ,((makeQ 0, makeAlphabet 1), S.fromList [Nd.Expr (makeQ 1, makeQ 1)])
       ,((makeQ 1, makeAlphabet 0), S.fromList [Nd.Expr (makeQ 1, makeQ 1)])
       ,((makeQ 1, makeAlphabet 1), S.empty)]
+}
+
+nd_1132 = Nd.Nd {
+    Nd.getQs = S.fromList [makeQ 0]
+  , Nd.getIs = S.fromList [makeQ 0]
+  , Nd.getFs = S.fromList [makeQ 0]
+  , Nd.getTrans = Map.fromList
+      [((makeQ 0, makeAlphabet 0), S.fromList [(Nd.Expr (makeQ 0, makeQ 0))])]
 }
