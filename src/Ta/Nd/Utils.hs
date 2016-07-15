@@ -1,4 +1,5 @@
 {-#LANGUAGE TupleSections #-}
+{-#LANGUAGE TypeFamilies #-}
 
 module Ta.Nd.Utils where
 
@@ -39,7 +40,8 @@ complement as nd = Nd {
   where nd' = complete as nd
 
 
-intersection :: (StateSet s, Q q1, Q q2) => Nd q1 s -> Nd q2 s -> Nd (QD (q1,q2)) s
+intersection :: (StateSet s, Q q1, Q q2, Q q', QElem q' ~ (q1,q2)) =>
+  Nd q1 s -> Nd q2 s -> Nd q' s
 intersection nd1 nd2 = Nd {
     getQs = S.map conv qs
   , getIs = S.map conv is

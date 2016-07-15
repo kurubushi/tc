@@ -1,4 +1,5 @@
 {-#LANGUAGE TupleSections #-}
+{-#LANGUAGE TypeFamilies #-}
 
 module Ta.Ata.Utils where
 
@@ -56,7 +57,8 @@ foldrExprAndWith :: (Foldable f, Q q) => (a -> Expr q) -> f a -> Expr q
 foldrExprAndWith f = foldr (\x acc -> f x `ExprAnd` acc) ExprTop
 
 
-toNd :: (StateSet s, Q q, Q (s q)) => s Alphabet -> Ata q s -> Nd.Nd (QD (s q)) s
+toNd :: (StateSet s, Q q, Ord (s q), Q q', QElem q' ~ s q) =>
+  s Alphabet -> Ata q s -> Nd.Nd q' s
 toNd as ata = Nd.Nd {
     Nd.getQs = S.map conv qs
   , Nd.getIs = S.map conv is
