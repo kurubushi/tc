@@ -57,7 +57,14 @@ unsafeConvertMap qs q = makeQ -- ** q must belong to qs **
   . zip (S.toList qs) $ [0..]
 
 takeNewQ :: (StateSet s, Ord q) => s (Q q) -> (Q q)
-takeNewQ = NewQ . toInteger . S.size -- (qs :: s Q) `S.union` (S.fromList [takeNewQ]) <= OK
+-- (qs :: s Q) `S.union` (S.fromList [takeNewQ]) <= OK
+takeNewQ = unsafeSuccQ . maxDummyQ
+  where
+    unsafeSuccQ (NewQ n) = NewQ (n+1)
+    maxDummyQ qs = let ds = S.toList . S.filter isDummy $ qs in
+      if null ds then NewQ 0 else maximum ds
+    isDummy (NewQ _) = True
+    isDummy _        = False
 
 
 data BTree' a x where
