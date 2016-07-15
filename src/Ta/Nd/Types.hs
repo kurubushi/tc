@@ -7,7 +7,7 @@ import Atom.Types
 import Data.Map.Lazy (Map)
 
 data Expr q where
-  Expr :: Ord q => (q, q) -> Expr q
+  Expr :: Q q => (q, q) -> Expr q
 deriving instance Eq q => Eq (Expr q)
 deriving instance Ord q => Ord (Expr q)
 deriving instance Show q => Show (Expr q)

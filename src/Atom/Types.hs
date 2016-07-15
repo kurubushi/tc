@@ -1,5 +1,6 @@
 {-#LANGUAGE GADTs #-}
 {-#LANGUAGE StandaloneDeriving #-}
+{-#LANGUAGE TypeFamilies #-}
 
 module Atom.Types where
 
@@ -26,46 +27,40 @@ isNotEnd :: Alphabet -> Bool
 isNotEnd = not . isEnd
 
 
---class Ord q => Q q where
---  makeQ :: q -> Q q
---  convertMap :: StateSet s => s q -> (q -> Maybe QInt)
---  unsafeConvertMap :: StateSet s => s q -> (q -> QInt)
---  takeNewQ :: StateSet s => s q -> q)
+class Ord q => Q q where
+  type QElem q
+  makeQ :: QElem q -> q
+  convertMap :: StateSet s => s q -> (q -> Maybe QInt)
+  unsafeConvertMap :: StateSet s => s q -> (q -> QInt)
+  takeNewQ :: StateSet s => s q -> q
 
+data QD q = QD q
+          | NewQ Integer -- count up from 0
+deriving instance Eq q => Eq (QD q)
+deriving instance Ord q => Ord (QD q)
+deriving instance Show q => Show (QD q)
 
-data Q q = Q q
-         | NewQ Integer -- count up from 0
-deriving instance Eq q => Eq (Q q)
-deriving instance Ord q => Ord (Q q)
-deriving instance Show q => Show (Q q)
+type QInt = QD Int
 
-type QInt = Q Int
+instance Ord a => Q (QD a) where
+  type QElem (QD a) = a
+  makeQ = QD
+  convertMap qs q =fmap makeQ
+    . Map.lookup q
+    . Map.fromList
+    . zip (S.toList qs) $ [0..]
+  unsafeConvertMap qs q = makeQ -- ** q must belong to qs **
+    . (Map.! q) -- unsafe lookup function
+    . Map.fromList
+    . zip (S.toList qs) $ [0..]
+  takeNewQ = unsafeSuccQ . maxDummyQ
+    where
+      unsafeSuccQ (NewQ n) = NewQ (n+1)
+      maxDummyQ qs = let ds = S.toList . S.filter isDummy $ qs in
+        if null ds then NewQ 0 else maximum ds
+      isDummy (NewQ _) = True
+      isDummy _        = False
  
-makeQ :: Ord q => q -> Q q
-makeQ = Q
-
-convertMap :: (StateSet s, Ord q) => s (Q q) -> ((Q q) -> Maybe QInt)
-convertMap qs q =fmap makeQ
-  . Map.lookup q
-  . Map.fromList
-  . zip (S.toList qs) $ [0..]
-
-unsafeConvertMap :: (StateSet s, Ord q) => s (Q q) -> ((Q q) -> QInt)
-unsafeConvertMap qs q = makeQ -- ** q must belong to qs **
-  . (Map.! q) -- unsafe lookup function
-  . Map.fromList
-  . zip (S.toList qs) $ [0..]
-
-takeNewQ :: (StateSet s, Ord q) => s (Q q) -> (Q q)
--- (qs :: s Q) `S.union` (S.fromList [takeNewQ]) <= OK
-takeNewQ = unsafeSuccQ . maxDummyQ
-  where
-    unsafeSuccQ (NewQ n) = NewQ (n+1)
-    maxDummyQ qs = let ds = S.toList . S.filter isDummy $ qs in
-      if null ds then NewQ 0 else maximum ds
-    isDummy (NewQ _) = True
-    isDummy _        = False
-
 
 data BTree' a x where
   BTEnd'  :: BTree' a x

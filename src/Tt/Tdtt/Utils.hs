@@ -18,7 +18,7 @@ import qualified Ta.Nd.Types as Nd
 import qualified Ta.Nd.Utils as Nd
 import Data.Maybe (fromMaybe)
 
-inf :: (StateSet s, Ord p, Ord q) => Nd q s -> Expr p -> q -> Ata.Expr (Q (p,q))
+inf :: (StateSet s, Q p, Q q) => Nd q s -> Expr p -> q -> Ata.Expr (QD (p,q))
 inf nd ExprL q
   | q `S.member` Nd.getFs nd = Ata.ExprTop
   | otherwise = Ata.ExprBottom
@@ -31,7 +31,7 @@ inf nd (ExprA a (e1,e2)) q =
 inf nd (ExprP p n) q = Ata.ExprCond n (makeQ (p,q))
 
 
-infer :: (StateSet s, Ord p, Ord q) => s Alphabet -> Tdtt (Q p) s -> Nd (Q q) s -> Ata (Q (Q p,Q q)) s
+infer :: (StateSet s, Q p, Q q) => s Alphabet -> Tdtt p s -> Nd q s -> Ata (QD (p,q)) s
 infer as tdtt nd = Ata {
     Ata.getQs = S.map conv qs
   , Ata.getIs = S.map conv is
@@ -59,8 +59,9 @@ infer as tdtt nd = Ata {
 
 
 typecheck ::
-  (Eq (s (Q (q1, Q (s (Q (Q p, Q q2)))))), Ord p, Ord q2, Ord q1, Ord (s (Q (Q p, Q q2))), StateSet s) =>
-  s Alphabet -> Nd q1 s -> Nd (Q q2) s -> Tdtt (Q p) s -> Bool
+  (Q p, Q q1, Q q2, StateSet s,
+  Ord (s (QD (p,q2))), Eq (s (QD (q1, QD (s, (QD p, q2)))))) =>
+  s Alphabet -> Nd q1 s -> Nd q2 s -> Tdtt p s -> Bool
 typecheck as inputNd outputNd tdtt = Nd.isEmpty testNd
   where
     inferAta = infer as tdtt outputNd

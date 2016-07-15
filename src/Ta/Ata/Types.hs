@@ -13,7 +13,7 @@ data Expr q where
   ExprAnd :: Expr q -> Expr q -> Expr q
   ExprTop :: Expr q
   ExprBottom :: Expr q
-  ExprCond :: Ord q => Int -> q -> Expr q
+  ExprCond :: Q q => Int -> q -> Expr q
 deriving instance Eq q => Eq (Expr q)
 deriving instance Ord q => Ord (Expr q)
 deriving instance Show q => Show (Expr q)

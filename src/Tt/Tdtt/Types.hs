@@ -10,7 +10,7 @@ import Data.Map (Map)
 data Expr p where
   ExprA :: Alphabet -> (Expr p, Expr p) -> Expr p
   ExprL :: Expr p
-  ExprP :: Ord p => p -> Int -> Expr p
+  ExprP :: Q p => p -> Int -> Expr p
 deriving instance Eq p => Eq (Expr p)
 deriving instance Ord p => Ord (Expr p)
 deriving instance Show p => Show (Expr p)

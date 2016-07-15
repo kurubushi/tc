@@ -9,7 +9,7 @@ import qualified Set.Types as S
 import qualified Set.Utils as S
 import qualified Data.Map as Map
 
-complete :: (StateSet s, Ord q) => s Alphabet -> Nd (Q q) s -> Nd (Q q) s
+complete :: (StateSet s, Q q) => s Alphabet -> Nd q s -> Nd q s
 complete as nd
   | S.null unDefines = nd
   | otherwise = Nd {
@@ -29,7 +29,7 @@ complete as nd
       . getTrans $ nd
 
 
-complement :: (StateSet s, Ord q) => s Alphabet -> Nd (Q q) s -> Nd (Q q) s
+complement :: (StateSet s, Q q) => s Alphabet -> Nd q s -> Nd q s
 complement as nd = Nd {
     getQs    = getQs nd'
   , getIs    = S.difference (getQs nd') (getIs nd')
@@ -39,7 +39,7 @@ complement as nd = Nd {
   where nd' = complete as nd
 
 
-intersection :: (StateSet s, Ord q1, Ord q2) => Nd q1 s -> Nd q2 s -> Nd (Q (q1,q2)) s
+intersection :: (StateSet s, Q q1, Q q2) => Nd q1 s -> Nd q2 s -> Nd (QD (q1,q2)) s
 intersection nd1 nd2 = Nd {
     getQs = S.map conv qs
   , getIs = S.map conv is
@@ -68,10 +68,10 @@ intersection nd1 nd2 = Nd {
     convPair (x,y) = (conv x, conv y)
 
 
-isEmpty :: (StateSet s, Ord q, Eq (s (Q q))) => Nd (Q q) s -> Bool
+isEmpty :: (StateSet s, Q q, Eq (s q)) => Nd q s -> Bool
 isEmpty nd = isEmptyWithQne nd $ getFs nd
 
-isEmptyWithQne :: (StateSet s, Ord q, Eq (s (Q q))) => Nd (Q q) s -> s (Q q) -> Bool
+isEmptyWithQne :: (StateSet s, Q q, Eq (s q)) => Nd q s -> s q -> Bool
 isEmptyWithQne nd qne
   | qne == qne' = S.null (qne `S.intersection` getIs nd)
   | otherwise   = isEmptyWithQne nd qne'
