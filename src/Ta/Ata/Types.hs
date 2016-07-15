@@ -1,23 +1,28 @@
 {-#LANGUAGE GADTs #-}
+{-#LANGUAGE StandaloneDeriving #-}
+{-#LANGUAGE FlexibleContexts #-}
 
 module Ta.Ata.Types where
 
 import Atom.Types
+import Set.Types (StateSet)
 import Data.Map.Lazy (Map)
 
-data Expr where
-  ExprOr :: Expr -> Expr -> Expr
-  ExprAnd :: Expr -> Expr -> Expr
-  ExprTop :: Expr
-  ExprBottom :: Expr
-  ExprCond :: Int -> Q -> Expr
-  deriving (Ord, Eq, Show)
+data Expr q where
+  ExprOr :: Expr q -> Expr q -> Expr q
+  ExprAnd :: Expr q -> Expr q -> Expr q
+  ExprTop :: Expr q
+  ExprBottom :: Expr q
+  ExprCond :: Q q => Int -> q -> Expr q
+deriving instance Eq q => Eq (Expr q)
+deriving instance Ord q => Ord (Expr q)
+deriving instance Show q => Show (Expr q)
 
-type Trans = Map (Q, Alphabet) Expr
+type Trans q = Map (q, Alphabet) (Expr q)
 
-data Ata s = Ata {
-    getQs    :: s Q
-  , getIs    :: s Q
-  , getFs    :: s Q
-  , getTrans :: Trans
+data Ata q s = Ata {
+    getQs    :: s q
+  , getIs    :: s q
+  , getFs    :: s q
+  , getTrans :: Trans q
 }

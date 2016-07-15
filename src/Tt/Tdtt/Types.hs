@@ -1,4 +1,5 @@
 {-#LANGUAGE GADTs #-}
+{-#LANGUAGE StandaloneDeriving #-}
 
 module Tt.Tdtt.Types where
 
@@ -6,16 +7,18 @@ import Atom.Types
 import Set.Types
 import Data.Map (Map)
 
-data Expr where
-  ExprA :: Alphabet -> (Expr, Expr) -> Expr
-  ExprL :: Expr
-  ExprP :: Q -> Int -> Expr
-  deriving (Eq, Ord, Show)
+data Expr p where
+  ExprA :: Alphabet -> (Expr p, Expr p) -> Expr p
+  ExprL :: Expr p
+  ExprP :: Q p => p -> Int -> Expr p
+deriving instance Eq p => Eq (Expr p)
+deriving instance Ord p => Ord (Expr p)
+deriving instance Show p => Show (Expr p)
 
-type Trans s = Map (Q, Alphabet) (s Expr)
+type Trans p s = Map (p, Alphabet) (s (Expr p))
 
-data Tdtt s = Tdtt {
-    getPs    :: s Q
-  , getP0    :: s Q
-  , getTrans :: Trans s
+data Tdtt p s = Tdtt {
+    getPs    :: s p
+  , getP0    :: s p
+  , getTrans :: Trans p s
 }

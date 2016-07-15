@@ -1,4 +1,6 @@
 {-#LANGUAGE GADTs #-}
+{-#LANGUAGE StandaloneDeriving #-}
+{-#LANGUAGE TypeFamilies #-}
 
 module Atom.Types where
 
@@ -25,27 +27,40 @@ isNotEnd :: Alphabet -> Bool
 isNotEnd = not . isEnd
 
 
-data Q = Q Integer -- count up from 0
-  deriving (Eq, Ord, Show)
+class Ord q => Q q where
+  type QElem q
+  makeQ :: QElem q -> q
+  convertMap :: StateSet s => s q -> (q -> Maybe QInt)
+  unsafeConvertMap :: StateSet s => s q -> (q -> QInt)
+  takeNewQ :: StateSet s => s q -> q
 
-makeQ :: Integral a => a -> Q
-makeQ = Q . toInteger
+data QD q = QD q
+          | NewQ Integer -- count up from 0
+deriving instance Eq q => Eq (QD q)
+deriving instance Ord q => Ord (QD q)
+deriving instance Show q => Show (QD q)
 
-convertMap :: (StateSet s, Ord a) => s a -> (a -> Maybe Q)
-convertMap qs q =fmap makeQ
-  . Map.lookup q
-  . Map.fromList
-  . zip (S.toList qs) $ [0..]
+type QInt = QD Int
 
-unsafeConvertMap :: (StateSet s, Ord a) => s a -> (a -> Q)
-unsafeConvertMap qs q = makeQ -- ** q must belong to qs **
-  . (Map.! q) -- unsafe lookup function
-  . Map.fromList
-  . zip (S.toList qs) $ [0..]
-
-takeNewQ :: StateSet s => s Q -> Q
-takeNewQ = makeQ . S.size -- (qs :: s Q) `S.union` (S.fromList [takeNewQ]) <= OK
-
+instance Ord a => Q (QD a) where
+  type QElem (QD a) = a
+  makeQ = QD
+  convertMap qs q =fmap makeQ
+    . Map.lookup q
+    . Map.fromList
+    . zip (S.toList qs) $ [0..]
+  unsafeConvertMap qs q = makeQ -- ** q must belong to qs **
+    . (Map.! q) -- unsafe lookup function
+    . Map.fromList
+    . zip (S.toList qs) $ [0..]
+  takeNewQ = unsafeSuccQ . maxDummyQ
+    where
+      unsafeSuccQ (NewQ n) = NewQ (n+1)
+      maxDummyQ qs = let ds = S.toList . S.filter isDummy $ qs in
+        if null ds then NewQ 0 else maximum ds
+      isDummy (NewQ _) = True
+      isDummy _        = False
+ 
 
 data BTree' a x where
   BTEnd'  :: BTree' a x
