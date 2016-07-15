@@ -9,7 +9,7 @@ import qualified Set.Types as S
 import qualified Set.Utils as S
 import qualified Data.Map as Map
 
-complete :: StateSet s => s Alphabet -> Nd s -> Nd s
+complete :: (StateSet s, Ord q) => s Alphabet -> Nd (Q q) s -> Nd (Q q) s
 complete as nd
   | S.null unDefines = nd
   | otherwise = Nd {
@@ -29,7 +29,7 @@ complete as nd
       . getTrans $ nd
 
 
-complement :: StateSet s => s Alphabet -> Nd s -> Nd s
+complement :: (StateSet s, Ord q) => s Alphabet -> Nd (Q q) s -> Nd (Q q) s
 complement as nd = Nd {
     getQs    = getQs nd'
   , getIs    = S.difference (getQs nd') (getIs nd')
@@ -39,7 +39,7 @@ complement as nd = Nd {
   where nd' = complete as nd
 
 
-intersection :: StateSet s => Nd s -> Nd s -> Nd s
+intersection :: (StateSet s, Ord q1, Ord q2) => Nd q1 s -> Nd q2 s -> Nd (Q (q1,q2)) s
 intersection nd1 nd2 = Nd {
     getQs = S.map conv qs
   , getIs = S.map conv is
@@ -52,14 +52,14 @@ intersection nd1 nd2 = Nd {
       . S.cartesian qs $ as
 }
   where
-    conv = unsafeConvertMap qs
+    conv = makeQ
     qs = S.cartesian (getQs nd1) (getQs nd2)
     is = S.cartesian (getIs nd1) (getIs nd2)
     fs = S.cartesian (getFs nd1) (getFs nd2)
     as = S.map snd keys1 `S.intersection` S.map snd keys2
     keys1 = S.fromList . Map.keys . getTrans $ nd1
     keys2 = S.fromList . Map.keys . getTrans $ nd2
-    relA :: StateSet s => (Q,Alphabet) -> Nd s -> s (Q,Q)
+    relA :: (Ord q, StateSet s) => (q,Alphabet) -> Nd q s -> s (q,q)
     relA key = S.map (\(Expr qpair) -> qpair)
       . Map.findWithDefault S.empty key
       . getTrans
@@ -68,10 +68,10 @@ intersection nd1 nd2 = Nd {
     convPair (x,y) = (conv x, conv y)
 
 
-isEmpty :: (StateSet s, Eq (s Q)) => Nd s -> Bool
+isEmpty :: (StateSet s, Ord q, Eq (s (Q q))) => Nd (Q q) s -> Bool
 isEmpty nd = isEmptyWithQne nd $ getFs nd
 
-isEmptyWithQne :: (StateSet s, Eq (s Q)) => Nd s -> s Q -> Bool
+isEmptyWithQne :: (StateSet s, Ord q, Eq (s (Q q))) => Nd (Q q) s -> s (Q q) -> Bool
 isEmptyWithQne nd qne
   | qne == qne' = S.null (qne `S.intersection` getIs nd)
   | otherwise   = isEmptyWithQne nd qne'

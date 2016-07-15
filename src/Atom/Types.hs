@@ -1,4 +1,5 @@
 {-#LANGUAGE GADTs #-}
+{-#LANGUAGE StandaloneDeriving #-}
 
 module Atom.Types where
 
@@ -25,26 +26,38 @@ isNotEnd :: Alphabet -> Bool
 isNotEnd = not . isEnd
 
 
-data Q = Q Integer -- count up from 0
-  deriving (Eq, Ord, Show)
+--class Ord q => Q q where
+--  makeQ :: q -> Q q
+--  convertMap :: StateSet s => s q -> (q -> Maybe QInt)
+--  unsafeConvertMap :: StateSet s => s q -> (q -> QInt)
+--  takeNewQ :: StateSet s => s q -> q)
 
-makeQ :: Integral a => a -> Q
-makeQ = Q . toInteger
 
-convertMap :: (StateSet s, Ord a) => s a -> (a -> Maybe Q)
+data Q q = Q q
+         | NewQ Integer -- count up from 0
+deriving instance Eq q => Eq (Q q)
+deriving instance Ord q => Ord (Q q)
+deriving instance Show q => Show (Q q)
+
+type QInt = Q Int
+ 
+makeQ :: Ord q => q -> Q q
+makeQ = Q
+
+convertMap :: (StateSet s, Ord q) => s (Q q) -> ((Q q) -> Maybe QInt)
 convertMap qs q =fmap makeQ
   . Map.lookup q
   . Map.fromList
   . zip (S.toList qs) $ [0..]
 
-unsafeConvertMap :: (StateSet s, Ord a) => s a -> (a -> Q)
+unsafeConvertMap :: (StateSet s, Ord q) => s (Q q) -> ((Q q) -> QInt)
 unsafeConvertMap qs q = makeQ -- ** q must belong to qs **
   . (Map.! q) -- unsafe lookup function
   . Map.fromList
   . zip (S.toList qs) $ [0..]
 
-takeNewQ :: StateSet s => s Q -> Q
-takeNewQ = makeQ . S.size -- (qs :: s Q) `S.union` (S.fromList [takeNewQ]) <= OK
+takeNewQ :: (StateSet s, Ord q) => s (Q q) -> (Q q)
+takeNewQ = NewQ . toInteger . S.size -- (qs :: s Q) `S.union` (S.fromList [takeNewQ]) <= OK
 
 
 data BTree' a x where

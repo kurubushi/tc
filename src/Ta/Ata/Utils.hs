@@ -11,7 +11,7 @@ import qualified Set.Types as S
 import qualified Set.Utils as S
 import qualified Data.Map as Map
 
-dnf :: (StateSet s, Ord (s Q)) => Expr -> s (s Q, s Q)
+dnf :: (StateSet s, Ord q, Ord (s q)) => Expr q -> s (s q, s q)
 dnf ExprTop = S.fromList [(S.empty, S.empty)]
 dnf ExprBottom = S.empty
 dnf (ExprAnd e1 e2) = S.fromList [(s1 `S.union` s1', s2 `S.union` s2')
@@ -20,14 +20,14 @@ dnf (ExprOr e1 e2) = dnf e1 `S.union` dnf e2
 dnf (ExprCond 1 q) = S.fromList [(S.fromList [q], S.empty)]
 dnf (ExprCond 2 q) = S.fromList [(S.empty, S.fromList [q])]
 
-accept :: (StateSet s, Ord (s Q)) =>
-  Ata s -> BTree Alphabet -> Bool
+accept :: (StateSet s, Ord q, Ord (s q)) =>
+  Ata q s -> BTree Alphabet -> Bool
 accept ata t = S.notNull
   . S.filter (\q -> acceptIn ata t (S.fromList [q]))
   . getIs $ ata
 
-acceptIn :: (StateSet s, Ord (s Q)) =>
-  Ata s -> BTree Alphabet -> s Q -> Bool
+acceptIn :: (StateSet s, Ord q, Ord (s q)) =>
+  Ata q s -> BTree Alphabet -> s q -> Bool
 acceptIn ata t s
   | isBTEnd t = s `S.isSubsetOf` getFs ata
   | otherwise = let (a,t1,t2) = unsafeGetElems t in -- t is not End
@@ -39,24 +39,24 @@ acceptIn ata t s
       . Map.filterWithKey (\(q,a') _ -> a == a' && q `S.member` s)
       . getTrans $ ata
 
-isTop :: Expr -> Bool
+isTop :: Expr q -> Bool
 isTop (ExprOr e1 e2) = isTop e1 || isTop e2
 isTop (ExprAnd e1 e2) = isTop e1 && isTop e2
 isTop ExprTop = True
 isTop ExprBottom = False
 isTop (ExprCond _ _) = False
 
-isNotTop :: Expr -> Bool
+isNotTop :: Expr q -> Bool
 isNotTop = not . isTop
 
-foldrExprOrWith :: Foldable f => (a -> Expr) -> f a -> Expr
+foldrExprOrWith :: (Foldable f, Ord q) => (a -> Expr q) -> f a -> Expr q
 foldrExprOrWith f = foldr (\x acc -> f x `ExprOr` acc) ExprBottom
 
-foldrExprAndWith :: Foldable f => (a -> Expr) -> f a -> Expr
+foldrExprAndWith :: (Foldable f, Ord q) => (a -> Expr q) -> f a -> Expr q
 foldrExprAndWith f = foldr (\x acc -> f x `ExprAnd` acc) ExprTop
 
 
-toNd :: (StateSet s, Ord (s Q)) => s Alphabet -> Ata s -> Nd.Nd s
+toNd :: (StateSet s, Ord q, Ord (s q)) => s Alphabet -> Ata q s -> Nd.Nd (Q (s q)) s
 toNd as ata = Nd.Nd {
     Nd.getQs = S.map conv qs
   , Nd.getIs = S.map conv is
@@ -67,7 +67,7 @@ toNd as ata = Nd.Nd {
       . S.cartesian qs $ as
 }
   where
-    conv = unsafeConvertMap qs
+    conv = makeQ
     convPair (x,y) = (conv x, conv y)
     qs = S.filter S.notNull . S.powerset . getQs $ ata
     is = S.map (\q -> S.fromList [q]) (getIs ata)
