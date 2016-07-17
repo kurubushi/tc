@@ -8,6 +8,7 @@ import Ta.Nd.Types
 import Set.Types (StateSet)
 import qualified Set.Types as S
 import qualified Set.Utils as S
+import Data.Map.Lazy (Map)
 import qualified Data.Map.Lazy as Map
 
 complete :: (StateSet s, Q q) => s Alphabet -> Nd q s -> Nd q s
@@ -74,14 +75,21 @@ isEmpty :: (StateSet s, Q q, Eq (s q)) => Nd q s -> Bool
 isEmpty nd = isEmptyWithQne nd $ getFs nd
 
 isEmptyWithQne :: (StateSet s, Q q, Eq (s q)) => Nd q s -> s q -> Bool
-isEmptyWithQne nd qne
-  | qne == qne' = S.null (qne `S.intersection` getIs nd)
-  | otherwise   = isEmptyWithQne nd qne'
+isEmptyWithQne nd qne = snd $ isEmptyWithQneFollow nd qne Map.empty
+
+isEmptyWithQneFollow :: (StateSet s, Q q, Eq (s q)) =>
+  Nd q s -> s q -> FollowMemoQ s q -> (FollowMemoQ s q,Bool)
+isEmptyWithQneFollow nd qne memo
+  | qne == qne' = (memo', S.null (qne `S.intersection` getIs nd))
+  | otherwise   = isEmptyWithQneFollow nd qne' memo'
   where
     qne' = qne `S.union` newQs
-    newQs = S.fromList
-      . map fst
-      . Map.keys
-      . Map.filter (S.notNull . S.filter 
-          (\(Expr (q1,q2)) -> (q1 `S.member` qne) && q2 `S.member` qne))
+    makeKeysSet = S.fromList . map fst . Map.keys
+    makeMemo = Map.fromListWith S.union
+      . map (\((q,a),es) -> (q, S.map (\(Expr (q1,q2)) -> (a,(q1,q2))) es))
+      . Map.toList
+    (newQs, memo') = (\m -> (makeKeysSet m, makeMemo m))
+      . Map.filter S.notNull
+      . Map.map (S.filter (\(Expr (q1,q2)) ->
+          q1 `S.member` qne && q2 `S.member` qne))
       . getTrans $ nd
