@@ -70,6 +70,7 @@ import qualified Data.Map.Lazy as Map
 
 alphabet = S.fromList [makeAlphabet 0, makeAlphabet 1]
 
+tdttt_1132 :: Tdtt.Trans QInt Set
 tdttt_1132 = Map.fromList
   [((makeQ 0, makeAlphabet 0), S.fromList [Tdtt.ExprA (makeAlphabet 0) ((Tdtt.ExprP (makeQ 0) 1),(Tdtt.ExprP (makeQ 0) 2))])
   ,((makeQ 0, makeAlphabet 1), S.fromList [Tdtt.ExprA (makeAlphabet 0) ((Tdtt.ExprP (makeQ 0) 1),(Tdtt.ExprP (makeQ 0) 2))
@@ -82,6 +83,7 @@ tdtt_1132 = Tdtt.Tdtt {
   , Tdtt.getTrans = tdttt_1132
 }
 
+nd_1132' :: Nd.Nd QInt Set
 nd_1132' = Nd.Nd {
     Nd.getQs = S.fromList [makeQ 0, makeQ 1]
   , Nd.getIs = S.fromList [makeQ 1]
@@ -93,6 +95,7 @@ nd_1132' = Nd.Nd {
       ,((makeQ 1, makeAlphabet 1), S.empty)]
 }
 
+nd_1132 :: Nd.Nd QInt Set
 nd_1132 = Nd.Nd {
     Nd.getQs = S.fromList [makeQ 0]
   , Nd.getIs = S.fromList [makeQ 0]

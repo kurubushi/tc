@@ -10,6 +10,7 @@ import qualified Set.Types as S
 import qualified Set.Utils as S
 import Data.Map.Lazy (Map)
 import qualified Data.Map.Lazy as Map
+import Control.Applicative (liftA2)
 
 complete :: (StateSet s, Q q) => s Alphabet -> Nd q s -> Nd q s
 complete as nd
@@ -75,12 +76,12 @@ isEmpty :: (StateSet s, Q q, Eq (s q)) => Nd q s -> Bool
 isEmpty nd = isEmptyWithQne nd $ getFs nd
 
 isEmptyWithQne :: (StateSet s, Q q, Eq (s q)) => Nd q s -> s q -> Bool
-isEmptyWithQne nd qne = snd $ isEmptyWithQneFollow nd qne Map.empty
+isEmptyWithQne nd qne = S.null . snd $ isEmptyWithQneFollow nd qne Map.empty
 
 isEmptyWithQneFollow :: (StateSet s, Q q, Eq (s q)) =>
-  Nd q s -> s q -> FollowMemoQ s q -> (FollowMemoQ s q,Bool)
+  Nd q s -> s q -> FollowMemoQ s q -> (FollowMemoQ s q, s q)
 isEmptyWithQneFollow nd qne memo
-  | qne == qne' = (memo', S.null (qne `S.intersection` getIs nd))
+  | qne == qne' = (memo', qne `S.intersection` getIs nd)
   | otherwise   = isEmptyWithQneFollow nd qne' memo'
   where
     qne' = qne `S.union` newQs
@@ -93,3 +94,15 @@ isEmptyWithQneFollow nd qne memo
       . Map.map (S.filter (\(Expr (q1,q2)) ->
           q1 `S.member` qne && q2 `S.member` qne))
       . getTrans $ nd
+
+unsafeSampleCounterExample :: (StateSet s, Q q) =>
+  Nd q s -> FollowMemoQ s q -> q -> BTree Alphabet
+unsafeSampleCounterExample nd memo q
+  | q `S.member` getFs nd = btEnd
+  | otherwise = makeTree . (Map.!) memo $ q
+  where
+    sample = head . S.toList
+    makeTree follows = let (a,(q1,q2)) = sample follows in
+      makeNode a
+        (unsafeSampleCounterExample nd memo q1)
+        (unsafeSampleCounterExample nd memo q2)
