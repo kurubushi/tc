@@ -6,7 +6,7 @@ module Atom.Types where
 
 import Set.Types (StateSet)
 import qualified Set.Types as S
-import qualified Data.Map as Map
+import qualified Data.Map.Lazy as Map
 import Control.Monad.Free (Free(..))
 import Data.Void (Void)
 

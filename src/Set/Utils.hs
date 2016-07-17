@@ -4,8 +4,8 @@ module Set.Utils where
 
 import Set.Types (StateSet)
 import qualified Set.Types as S
-import Data.Map (Map)
-import qualified Data.Map as Map
+import Data.Map.Lazy (Map)
+import qualified Data.Map.Lazy as Map
 
 toMap :: (StateSet s, Ord k) => s (k,v) -> Map k v
 toMap = Map.fromList . S.toList

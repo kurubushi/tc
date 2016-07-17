@@ -10,7 +10,7 @@ import qualified Ta.Nd.Types as Nd
 import qualified Ta.Nd.Utils as Nd
 import qualified Set.Types as S
 import qualified Set.Utils as S
-import qualified Data.Map as Map
+import qualified Data.Map.Lazy as Map
 
 dnf :: (StateSet s, Q q, Ord (s q)) => Expr q -> s (s q, s q)
 dnf ExprTop = S.fromList [(S.empty, S.empty)]

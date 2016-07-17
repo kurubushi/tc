@@ -8,7 +8,7 @@ import Ta.Nd.Types
 import Set.Types (StateSet)
 import qualified Set.Types as S
 import qualified Set.Utils as S
-import qualified Data.Map as Map
+import qualified Data.Map.Lazy as Map
 
 complete :: (StateSet s, Q q) => s Alphabet -> Nd q s -> Nd q s
 complete as nd

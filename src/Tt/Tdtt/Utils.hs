@@ -11,7 +11,7 @@ import qualified Set.Types as S
 import qualified Set.Utils as S
 import Tt.Tdtt.Types
 import qualified Tt.Tdtt.Types as Tdtt
-import qualified Data.Map as Map
+import qualified Data.Map.Lazy as Map
 import Ta.Ata.Types (Ata(..))
 import qualified Ta.Ata.Types as Ata
 import qualified Ta.Ata.Utils as Ata

@@ -5,7 +5,7 @@ module Tt.Tdtt.Types where
 
 import Atom.Types
 import Set.Types
-import Data.Map (Map)
+import Data.Map.Lazy (Map)
 
 data Expr p where
   ExprA :: Alphabet -> (Expr p, Expr p) -> Expr p

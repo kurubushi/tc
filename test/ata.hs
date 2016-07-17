@@ -9,8 +9,8 @@ import qualified Tt.Tdtt.Utils as Tdtt
 import Data.Set (Set)
 import qualified Set.Types as SS
 import qualified Data.Set as S
-import Data.Map (Map)
-import qualified Data.Map as Map
+import Data.Map.Lazy (Map)
+import qualified Data.Map.Lazy as Map
 
 --newtype Q = Q Int deriving (Ord, Eq, Show)
 --instance Atom.Q Q
