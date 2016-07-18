@@ -35,8 +35,8 @@ inf nd (ExprP p n) q = Ata.ExprCond n (makeQ (p,q))
 
 
 infer :: forall s p q q'. (StateSet s, Q p, Q q, Q q', QElem q' ~ (p,q)) =>
-  s Alphabet -> Tdtt p s -> Nd q s -> Ata q' s
-infer as tdtt nd = Ata {
+  s Alphabet -> s Alphabet -> Tdtt p s -> Nd q s -> Ata q' s
+infer inputAs outputAs tdtt nd = Ata {
     Ata.getQs = S.map conv qs
   , Ata.getIs = S.map conv is
   , Ata.getFs = S.map conv
@@ -53,13 +53,13 @@ infer as tdtt nd = Ata {
           . Ata.foldrExprOrWith (Ata.foldrExprOrWith (\e -> inf nd e q))
           . Map.filterWithKey (\(p',a') _ -> isNotEnd a' && p'==p && a'==a)
           . Tdtt.getTrans $ tdtt)
-      . S.cartesian qs $ as
+      . S.cartesian qs $ inputAs
 }
   where
     conv = makeQ
     qs = S.cartesian (getPs tdtt) (Nd.getQs ndc)
     is = S.cartesian (getP0 tdtt) (Nd.getIs ndc)
-    ndc = Nd.complement as nd
+    ndc = Nd.complement outputAs nd
 
 
 typecheck :: forall p q1 q2 s q3 q4 q5.
@@ -68,9 +68,9 @@ typecheck :: forall p q1 q2 s q3 q4 q5.
    Q q4, q4 ~ QD (s q3),
    Q q5, q5 ~ QD (q1,q4),
    Ord (s q3), Eq (s q5)) =>
-  s Alphabet -> Nd q1 s -> Nd q2 s -> Tdtt p s -> Bool
-typecheck as inputNd outputNd tdtt = Nd.isEmpty testNd
+  s Alphabet -> s Alphabet -> Nd q1 s -> Nd q2 s -> Tdtt p s -> Bool
+typecheck inputAs outputAs inputNd outputNd tdtt = Nd.isEmpty testNd
   where
-    inferAta = infer as tdtt outputNd :: Ata q3 s
-    inferNd = Ata.toNd as inferAta :: Nd q4 s
+    inferAta = infer inputAs outputAs tdtt outputNd :: Ata q3 s
+    inferNd = Ata.toNd inputAs inferAta :: Nd q4 s
     testNd = inputNd `Nd.intersection` inferNd :: Nd q5 s
