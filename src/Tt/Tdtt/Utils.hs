@@ -43,14 +43,14 @@ infer inputAs outputAs tdtt nd = Ata {
       . S.fromList -- using List becase s (Expr a q) is not Ord.
       . map (\(q,((p,_),_)) -> (p,q))
       . filter (\(q,(_,es)) -> (Ata.isTop :: Ata.Expr q' -> Bool)
-          . Ata.foldrExprOrWith (\e -> inf nd e q) $ es)
+          . Ata.foldrExprOrWith (\e -> inf ndc e q) $ es)
       . S.cartesian (S.toList . Nd.getQs $ ndc) -- :: [(q, ((p,a), s (Expr a p)))]
       . Map.toList -- :: [((p,a), s (Expr a p))]
       . Map.filterWithKey (\(_,a) _ -> isEnd a)
       . Tdtt.getTrans $ tdtt
   , Ata.getTrans = S.toMap
       . S.map (\((p,q),a) -> ((conv (p,q),a),)
-          . Ata.foldrExprOrWith (Ata.foldrExprOrWith (\e -> inf nd e q))
+          . Ata.foldrExprOrWith (Ata.foldrExprOrWith (\e -> inf ndc e q))
           . Map.filterWithKey (\(p',a') _ -> isNotEnd a' && p'==p && a'==a)
           . Tdtt.getTrans $ tdtt)
       . S.cartesian qs $ inputAs
