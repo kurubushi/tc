@@ -80,15 +80,17 @@ isEmptyWithQne :: (StateSet s, Q q, Eq (s q)) => Nd q s -> s q -> Bool
 isEmptyWithQne nd qne = S.null . snd $ isEmptyWithQneFollow nd qne Map.empty
 
 isEmptyWithQneFollow :: (StateSet s, Q q, Eq (s q)) =>
-  Nd q s -> s q -> FollowMemoQ s q -> (FollowMemoQ s q, s q)
+  Nd q s -> s q -> FollowMemoQ q -> (FollowMemoQ q, s q)
 isEmptyWithQneFollow nd qne memo
   | qne == qne' = (memo', qne `S.intersection` getIs nd)
   | otherwise   = isEmptyWithQneFollow nd qne' memo'
   where
     qne' = qne `S.union` newQs
     makeKeysSet = S.fromList . map fst . Map.keys
-    makeMemo = Map.fromListWith S.union
-      . map (\((q,a),es) -> (q, S.map (\(Expr (q1,q2)) -> (a,(q1,q2))) es))
+    notUpdateFromList = Map.fromListWith const -- 前のものがあれば更新しない
+    takeSample = (\(Expr (q1,q2)) -> (q1,q2)) . head . S.toList
+    makeMemo = notUpdateFromList
+      . map (\((q,a),es) -> (q, (a,takeSample es)))
       . Map.toList
     (newQs, memo') = (\m -> (makeKeysSet m, makeMemo m))
       . Map.filter S.notNull
@@ -96,14 +98,14 @@ isEmptyWithQneFollow nd qne memo
           q1 `S.member` qne && q2 `S.member` qne))
       . getTrans $ nd
 
+
 unsafeSampleCounterExample :: (StateSet s, Q q) =>
-  Nd q s -> FollowMemoQ s q -> q -> BTree Alphabet
+  Nd q s -> FollowMemoQ q -> q -> BTree Alphabet
 unsafeSampleCounterExample nd memo q
   | q `S.member` getFs nd = btEnd
   | otherwise = makeTree . (Map.!) memo $ q
   where
-    sample = head . S.toList
-    makeTree follows = let (a,(q1,q2)) = sample follows in
+    makeTree (a,(q1,q2)) =
       makeNode a
         (unsafeSampleCounterExample nd memo q1)
         (unsafeSampleCounterExample nd memo q2)

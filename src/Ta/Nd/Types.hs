@@ -21,4 +21,4 @@ data Nd q s = Nd {
   , getTrans :: Trans q s
 }
 
-type FollowMemoQ s q = Map q (s (Alphabet,(q,q)))
+type FollowMemoQ q = Map q (Alphabet,(q,q))
