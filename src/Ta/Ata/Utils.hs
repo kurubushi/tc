@@ -71,7 +71,7 @@ toNd as ata = Nd.Nd {
   where
     conv = makeQ
     convPair (x,y) = (conv x, conv y)
-    qs = S.filter S.notNull . S.powerset . getQs $ ata
+    qs = S.powerset . getQs $ ata
     is = S.map (\q -> S.fromList [q]) (getIs ata)
     fs = S.filter (\s -> s `S.isSubsetOf` getFs ata) qs
     makeSubs (s,a) = ((conv s,a),) . S.map (Nd.Expr . convPair) . dnf 
