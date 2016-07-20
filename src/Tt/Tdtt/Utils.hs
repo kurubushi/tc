@@ -27,9 +27,12 @@ inf nd ExprL q
   | otherwise = Ata.ExprBottom
 inf nd (ExprA a (e1,e2)) q =
   maybe Ata.ExprBottom (Ata.foldrExprOrWith infAndinf)
-  . Map.lookup (q, a)
+  . findExpr (q, a)
   . Nd.getTrans $ nd
   where
+    findExpr (q, a)
+      | isEnd a = const Nothing
+      | otherwise = Map.lookup (q, a)
     infAndinf (Nd.Expr (q1,q2)) = inf nd e1 q1 `Ata.ExprAnd` inf nd e2 q2
 inf nd (ExprP p n) q = Ata.ExprCond n (makeQ (p,q))
 
@@ -50,8 +53,8 @@ infer inputAs outputAs tdtt nd = Ata {
       . Tdtt.getTrans $ tdtt
   , Ata.getTrans = S.toMap
       . S.map (\((p,q),a) -> ((conv (p,q),a),)
-          . Ata.foldrExprOrWith (Ata.foldrExprOrWith (\e -> inf ndc e q))
-          . Map.filterWithKey (\(p',a') _ -> isNotEnd a' && p'==p && a'==a)
+          . Ata.foldrExprOrWith (\e -> inf ndc e q)
+          . findExpr (p,a)
           . Tdtt.getTrans $ tdtt)
       . S.cartesian qs $ inputAs
 }
@@ -59,6 +62,9 @@ infer inputAs outputAs tdtt nd = Ata {
     conv = makeQ
     qs = S.cartesian (getPs tdtt) (Nd.getQs ndc)
     is = S.cartesian (getP0 tdtt) (Nd.getIs ndc)
+    findExpr (p,a)
+      | isEnd a   = const (S.fromList [])
+      | otherwise = Map.findWithDefault (S.fromList []) (p,a)
     ndc = Nd.complement outputAs nd
 
 
