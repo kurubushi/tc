@@ -14,7 +14,7 @@ import Control.Applicative (liftA2)
 
 complete :: (StateSet s, Q q) => s Alphabet -> Nd q s -> Nd q s
 complete as nd
-  | S.null unDefines = nd
+  | S.null unDefinesInOriginal = nd
   | otherwise = Nd {
       getQs = qs
     , getIs = getIs nd
@@ -24,8 +24,9 @@ complete as nd
   where
     dummyQ = takeNewQ (getQs nd)
     qs = getQs nd `S.union` S.fromList [dummyQ]
-    addedTrans = S.toMapfoldr S.union (\e -> S.fromList [e]). S.map (\(a,e) -> ((dummyQ,a), e)) $ unDefines
+    addedTrans = S.toMapfoldr S.union (\e -> S.fromList [e]) . S.map (\(a,e) -> ((dummyQ,a), e)) $ unDefines
     unDefines = allCombis `S.difference` defines
+    unDefinesInOriginal = S.filter (\(a,(Expr (q1,q2))) -> q1/=dummyQ && q2 /=dummyQ) unDefines
     allCombis = as `S.cartesian` S.map Expr (qs `S.cartesian` qs)
     defines = -- :: s (Alphabet,Expr)
       Map.foldrWithKey (\(q,a) es acc -> S.map (a,) es `S.union` acc) S.empty
