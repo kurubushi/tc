@@ -188,3 +188,116 @@ nd_notx6 = Nd.Nd {
 -- let testNd = nd_02_in `Nd.intersection` inferNd :: Nd.Nd (QD (QInt, QD (Set (QD (QInt,QInt))))) Set
 -- let (memo, qs) = Nd.isEmptyWithQneFollow testNd (Nd.getFs testNd) Map.empty
 -- Nd.unsafeSampleCounterExample testNd memo (head . S.toList $ qs)
+
+
+
+
+-- fibonacci
+
+fib  = makeQ 0 :: QInt
+fib' = makeQ 1 :: QInt
+-- fib 0 = 1
+-- fib 1 = 2
+-- fib 2 = 3
+-- fib 3 = 5
+-- fib 4 = 8
+-- fib 5 = 13
+-- fib 6 = 21
+-- fib 7 = 34
+-- fib 8 = 55
+
+a = makeAlphabet 0
+fibAlphabet = S.fromList [a]
+
+-- フィボナッチ数を計算．2つずれている．
+-- 木はa(a(a(a(#,#),#),#),#)のようなものを想定する．
+-- 入力側ではaの数がその木の自然数を意味し，
+-- 出力側では#の数はその木の自然数を意味する．
+tdtt_03 :: Tdtt QInt Set
+tdtt_03 = Tdtt.Tdtt {
+    Tdtt.getPs = S.fromList [fib, fib']
+  , Tdtt.getP0 = S.fromList [fib]
+  , Tdtt.getTrans = tdtt_03_t
+}
+tdtt_03_t :: Tdtt.Trans QInt Set
+tdtt_03_t = Map.fromList
+  [((fib ,a ), S.fromList [Tdtt.ExprA a (Tdtt.ExprP fib 1, Tdtt.ExprP fib' 1)])
+  ,((fib ,ae), S.fromList [Tdtt.ExprL])
+  ,((fib',a ), S.fromList [Tdtt.ExprP fib 1])
+  ,((fib',ae), S.fromList [Tdtt.ExprL])]
+
+-- 入力側，3割って1余るもの
+nd_fib_in_3amari1 :: Nd.Nd QInt Set
+nd_fib_in_3amari1 = Nd.Nd {
+    Nd.getQs = S.fromList [q0,q1,q2,qe]
+  , Nd.getIs = S.fromList [q1]
+  , Nd.getFs = S.fromList [qe]
+  , Nd.getTrans = Map.fromList
+      [((q1,a), S.fromList [Nd.Expr (qe,qe), Nd.Expr (q0,qe)])
+      ,((q2,a), S.fromList [Nd.Expr (q1,qe)])
+      ,((q0,a), S.fromList [Nd.Expr (q2,qe)])]
+}
+
+-- 出力側，偶数
+nd_fib_out_even :: Nd.Nd QInt Set
+nd_fib_out_even = Nd.Nd {
+    Nd.getQs = S.fromList [q0,q1]
+  , Nd.getIs = S.fromList [q0]
+  , Nd.getFs = S.fromList [q1]
+  , Nd.getTrans = Map.fromList
+      [((q0,a), S.fromList [Nd.Expr (q1,q1), Nd.Expr (q0,q0)])
+      ,((q1,a), S.fromList [Nd.Expr (q0,q1), Nd.Expr (q1,q0)])]
+}
+
+-- 出力側，奇数
+nd_fib_out_odd :: Nd.Nd QInt Set
+nd_fib_out_odd = Nd.Nd {
+    Nd.getQs = S.fromList [q0,q1]
+  , Nd.getIs = S.fromList [q1]
+  , Nd.getFs = S.fromList [q1]
+  , Nd.getTrans = Map.fromList
+      [((q0,a), S.fromList [Nd.Expr (q1,q1), Nd.Expr (q0,q0)])
+      ,((q1,a), S.fromList [Nd.Expr (q0,q1), Nd.Expr (q1,q0)])]
+}
+
+-- 入力側，5で割って3余る
+nd_fib_in_5amari3 :: Nd.Nd QInt Set
+nd_fib_in_5amari3 = Nd.Nd {
+    Nd.getQs = S.fromList [q0,q1,q2,q3,q4,qe]
+  , Nd.getIs = S.fromList [q3]
+  , Nd.getFs = S.fromList [qe]
+  , Nd.getTrans = Map.fromList
+      [((q1,a), S.fromList [Nd.Expr (qe,qe), Nd.Expr (q0,qe)])
+      ,((q2,a), S.fromList [Nd.Expr (q1,qe)])
+      ,((q3,a), S.fromList [Nd.Expr (q2,qe)])
+      ,((q4,a), S.fromList [Nd.Expr (q3,qe)])
+      ,((q0,a), S.fromList [Nd.Expr (q4,qe)])]
+}
+
+-- 出力側，5の倍数
+nd_fib_out_x5 :: Nd.Nd QInt Set
+nd_fib_out_x5 = Nd.Nd {
+    Nd.getQs = S.fromList [q0,q1,q2,q3,q4]
+  , Nd.getIs = S.fromList [q0]
+  , Nd.getFs = S.fromList [q1]
+  , Nd.getTrans = Map.fromList
+      [((q1,a), S.fromList . map Nd.Expr $ [(q0,q1),(q1,q0),(q2,q4),(q3,q3),(q4,q2)])
+      ,((q2,a), S.fromList . map Nd.Expr $ [(q0,q2),(q1,q1),(q2,q0),(q3,q4),(q4,q3)])
+      ,((q3,a), S.fromList . map Nd.Expr $ [(q0,q3),(q1,q2),(q2,q1),(q3,q0),(q4,q4)])
+      ,((q4,a), S.fromList . map Nd.Expr $ [(q0,q4),(q1,q3),(q2,q2),(q3,q1),(q4,q0)])
+      ,((q0,a), S.fromList . map Nd.Expr $ [(q0,q0),(q1,q4),(q2,q3),(q3,q2),(q4,q1)])]
+}
+
+-- 出力側，5で割って1余る
+nd_fib_out_x5_1 :: Nd.Nd QInt Set
+nd_fib_out_x5_1 = Nd.Nd {
+    Nd.getQs = S.fromList [q0,q1,q2,q3,q4]
+  , Nd.getIs = S.fromList [q1]
+  , Nd.getFs = S.fromList [q1]
+  , Nd.getTrans = Map.fromList
+      [((q1,a), S.fromList . map Nd.Expr $ [(q0,q1),(q1,q0),(q2,q4),(q3,q3),(q4,q2)])
+      ,((q2,a), S.fromList . map Nd.Expr $ [(q0,q2),(q1,q1),(q2,q0),(q3,q4),(q4,q3)])
+      ,((q3,a), S.fromList . map Nd.Expr $ [(q0,q3),(q1,q2),(q2,q1),(q3,q0),(q4,q4)])
+      ,((q4,a), S.fromList . map Nd.Expr $ [(q0,q4),(q1,q3),(q2,q2),(q3,q1),(q4,q0)])
+      ,((q0,a), S.fromList . map Nd.Expr $ [(q0,q0),(q1,q4),(q2,q3),(q3,q2),(q4,q1)])]
+}
