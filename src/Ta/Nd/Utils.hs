@@ -10,7 +10,8 @@ import qualified Set.Types as S
 import qualified Set.Utils as S
 import Data.Map.Lazy (Map)
 import qualified Data.Map.Lazy as Map
-import Control.Applicative (liftA2)
+import Control.Monad
+import Control.Applicative
 
 complete :: (StateSet s, Q q) => s Alphabet -> Nd q s -> Nd q s
 complete as nd
@@ -100,13 +101,24 @@ isEmptyWithQneFollow nd qne memo
       . getTrans $ nd
 
 
+sampleCounterExample :: (StateSet s, Q q) =>
+  Nd q s -> FollowMemoQ q -> q -> Maybe (BTree Alphabet)
+sampleCounterExample nd memo q
+  | q `S.member` getFs nd = Just btEnd
+  | otherwise = makeTree <=< Map.lookup q $ memo
+  where
+    makeTree (a,(q1,q2)) = makeNode a
+      <$> (sampleCounterExample nd memo q1)
+      <*> (sampleCounterExample nd memo q2)
+
+-- memo and q must be created by isEmptyWithQneFollow.
+-- isEmptyWithQneFollowで得られたものならば必ず成功するはず
 unsafeSampleCounterExample :: (StateSet s, Q q) =>
   Nd q s -> FollowMemoQ q -> q -> BTree Alphabet
 unsafeSampleCounterExample nd memo q
   | q `S.member` getFs nd = btEnd
   | otherwise = makeTree . (Map.!) memo $ q
   where
-    makeTree (a,(q1,q2)) =
-      makeNode a
-        (unsafeSampleCounterExample nd memo q1)
-        (unsafeSampleCounterExample nd memo q2)
+    makeTree (a,(q1,q2)) = makeNode a
+      (unsafeSampleCounterExample nd memo q1)
+      (unsafeSampleCounterExample nd memo q2)
