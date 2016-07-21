@@ -87,9 +87,10 @@ isEmptyWithQneFollow nd qne memo
   where
     qne' = qne `S.union` newQs
     makeKeysSet = S.fromList . map fst . Map.keys
-    notUpdateFromList = Map.fromListWith const -- 前のものがあれば更新しない
+    -- 前のものがあれば更新しない
+    notUpdateFromList memo = Map.unionWith const memo . Map.fromListWith const
     takeSample = (\(Expr (q1,q2)) -> (q1,q2)) . head . S.toList
-    makeMemo = notUpdateFromList
+    makeMemo = notUpdateFromList memo
       . map (\((q,a),es) -> (q, (a,takeSample es)))
       . Map.toList
     (newQs, memo') = (\m -> (makeKeysSet m, makeMemo m))
