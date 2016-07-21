@@ -24,10 +24,9 @@ testTypeCheck :: forall p q1 q2 q3 q4 q5.
    q4 ~ QD (Set q3),
    q5 ~ QD (q1,q4)) =>
    Set Alphabet -> Set Alphabet -> Nd q1 Set -> Nd q2 Set -> Tdtt p Set -> Maybe (BTree Alphabet)
-testTypeCheck inputAs outputAs inputNd outputNd tdtt =
-  if S.null qs
-    then Nothing
-    else Just $ Nd.unsafeSampleCounterExample testNd memo (head . S.toList $ qs)
+testTypeCheck inputAs outputAs inputNd outputNd tdtt
+  | S.null qs = Nothing
+  | otherwise = Nd.sampleCounterExample testNd memo (head . S.toList $ qs)
   where
   inferAta = Tdtt.infer inputAs outputAs tdtt outputNd :: Ata q3 Set
   inferNd = Ata.toNd inputAs inferAta :: Nd q4 Set
