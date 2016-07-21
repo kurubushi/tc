@@ -12,6 +12,7 @@ import Data.Map.Lazy (Map)
 import qualified Data.Map.Lazy as Map
 import Control.Monad
 import Control.Applicative
+import Control.Arrow
 
 complete :: (StateSet s, Q q) => s Alphabet -> Nd q s -> Nd q s
 complete as nd
@@ -27,7 +28,7 @@ complete as nd
     qs = getQs nd `S.union` S.fromList [dummyQ]
     addedTrans = S.toMapfoldr S.union (\e -> S.fromList [e]) . S.map (\(a,e) -> ((dummyQ,a), e)) $ unDefines
     unDefines = allCombis `S.difference` defines
-    unDefinesInOriginal = S.filter (\(a,(Expr (q1,q2))) -> q1/=dummyQ && q2 /=dummyQ) unDefines
+    unDefinesInOriginal = S.filter (\(a,Expr (q1,q2)) -> q1/=dummyQ && q2 /=dummyQ) unDefines
     allCombis = as `S.cartesian` S.map Expr (qs `S.cartesian` qs)
     defines = -- :: s (Alphabet,Expr)
       Map.foldrWithKey (\(q,a) es acc -> S.map (a,) es `S.union` acc) S.empty
@@ -83,7 +84,7 @@ isEmptyWithQne nd qne = S.null . snd $ isEmptyWithQneFollow nd qne Map.empty
 isEmptyWithQneFollow :: (StateSet s, Q q, Eq (s q)) =>
   Nd q s -> s q -> FollowMemoQ q -> (FollowMemoQ q, s q)
 isEmptyWithQneFollow nd qne memo
-  | S.notNull reachedQs || qne == qne' = (memo', reachedQs)
+  | qne == qne' || S.notNull reachedQs = (memo', reachedQs)
   | otherwise = isEmptyWithQneFollow nd qne' memo'
   where
     reachedQs = qne' `S.intersection` getIs nd
@@ -94,7 +95,7 @@ isEmptyWithQneFollow nd qne memo
     makeMemo = notUpdateFromList memo
       . map (\((q,a),es) -> (q, (a,takeSample es)))
       . Map.toList
-    (qne', memo') = (\m -> (makeKeysSet m, makeMemo m))
+    (qne', memo') = (makeKeysSet &&& makeMemo)
       . Map.filter S.notNull
       . Map.map (S.filter (\(Expr (q1,q2)) ->
           q1 `S.member` qne && q2 `S.member` qne))
@@ -108,8 +109,8 @@ sampleCounterExample nd memo q
   | otherwise = makeTree <=< Map.lookup q $ memo
   where
     makeTree (a,(q1,q2)) = makeNode a
-      <$> (sampleCounterExample nd memo q1)
-      <*> (sampleCounterExample nd memo q2)
+      <$> sampleCounterExample nd memo q1
+      <*> sampleCounterExample nd memo q2
 
 -- memo and q must be created by isEmptyWithQneFollow.
 -- isEmptyWithQneFollowで得られたものならば必ず成功するはず
@@ -117,7 +118,7 @@ unsafeSampleCounterExample :: (StateSet s, Q q) =>
   Nd q s -> FollowMemoQ q -> q -> BTree Alphabet
 unsafeSampleCounterExample nd memo q
   | q `S.member` getFs nd = btEnd
-  | otherwise = makeTree . (Map.!) memo $ q
+  | otherwise = makeTree . (Map.! q) $ memo
   where
     makeTree (a,(q1,q2)) = makeNode a
       (unsafeSampleCounterExample nd memo q1)
