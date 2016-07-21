@@ -1,10 +1,14 @@
+{-#LANGUAGE TypeFamilies #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+
 import Atom.Types
 import Ta.Ata.Types (Ata(..))
 import qualified Ta.Ata.Types as Ata
 import qualified Ta.Ata.Utils as Ata
+import Ta.Nd.Types (Nd(..))
 import qualified Ta.Nd.Types as Nd
 import qualified Ta.Nd.Utils as Nd
-import Tt.Tdtt.Types (Tdtt)
+import Tt.Tdtt.Types (Tdtt(..))
 import qualified Tt.Tdtt.Types as Tdtt
 import qualified Tt.Tdtt.Utils as Tdtt
 import Data.Set (Set)
@@ -12,6 +16,23 @@ import qualified Set.Types as SS
 import qualified Data.Set as S
 import Data.Map.Lazy (Map)
 import qualified Data.Map.Lazy as Map
+
+
+testTypeCheck :: forall p q1 q2 q3 q4 q5.
+  (Q p, Q q1, Q q2,
+   q3 ~ QD (p,q2),
+   q4 ~ QD (Set q3),
+   q5 ~ QD (q1,q4)) =>
+   Set Alphabet -> Set Alphabet -> Nd q1 Set -> Nd q2 Set -> Tdtt p Set -> Maybe (BTree Alphabet)
+testTypeCheck inputAs outputAs inputNd outputNd tdtt =
+  if S.null qs
+    then Nothing
+    else Just $ Nd.unsafeSampleCounterExample testNd memo (head . S.toList $ qs)
+  where
+  inferAta = Tdtt.infer inputAs outputAs tdtt outputNd :: Ata q3 Set
+  inferNd = Ata.toNd inputAs inferAta :: Nd q4 Set
+  testNd = inputNd `Nd.intersection` inferNd :: Nd q5 Set
+  (memo, qs) = Nd.isEmptyWithQneFollow testNd (Nd.getFs testNd) Map.empty
 
 ae = endAlphabet
 a0 = makeAlphabet 0
