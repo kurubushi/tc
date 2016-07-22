@@ -90,3 +90,19 @@ getElems _                        = Nothing
 -- tree must not be End.
 unsafeGetElems :: BTree a -> (a, BTree a, BTree a)
 unsafeGetElems (Free (BTNode' x t1 t2)) = (x, t1, t2)
+
+
+type AlphabetMap = Map Alphabet String
+
+showBTree :: AlphabetMap -> BTree Alphabet -> String
+showBTree am = unlines . showBTree' am
+
+showBTree' :: AlphabetMap -> BTree Alphabet -> [String]
+showBTree' am bt
+  | isBTEnd bt = [am Map.! endAlphabet]
+  | otherwise  = shift (am Map.! a) (showBTree' am t1) (showBTree' am t2)
+    where
+      (a,t1,t2) = unsafeGetElems bt
+      shift x t1 t2 = (++ ("|":t2))
+        (zipWith (++)
+          ((x ++ "-") : repeat ("|" ++ replicate (length x) ' ')) t1)
