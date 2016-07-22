@@ -77,7 +77,7 @@ makeNode x t1 t2 = Free $ BTNode' x t1 t2
 
 isBTEnd :: BTree a -> Bool
 isBTEnd (Free BTEnd') = True
-isBTEnd _             = True
+isBTEnd _             = False
 
 isNotBTEnd :: BTree a -> Bool
 isNotBTEnd = not . isBTEnd
