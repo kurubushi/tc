@@ -10,6 +10,7 @@ import Data.Map.Lazy (Map)
 import qualified Data.Map.Lazy as Map
 import Control.Monad.Free (Free(..))
 import Data.Void (Void)
+import Control.Applicative
 
 data Alphabet = Alphabet Integer | AlphabetEnd
   deriving (Eq, Ord, Show)
@@ -90,3 +91,21 @@ getElems _                        = Nothing
 -- tree must not be End.
 unsafeGetElems :: BTree a -> (a, BTree a, BTree a)
 unsafeGetElems (Free (BTNode' x t1 t2)) = (x, t1, t2)
+
+
+type AlphabetMap = Map Alphabet String
+
+showBTree :: AlphabetMap -> BTree Alphabet -> Maybe String
+showBTree am bt = unlines <$> showBTree' am bt
+
+showBTree' :: AlphabetMap -> BTree Alphabet -> Maybe [String]
+showBTree' am bt
+  | isBTEnd bt = mkSingle <$> Map.lookup endAlphabet am
+  | otherwise  = shift <$> (Map.lookup a am)
+                       <*> (showBTree' am t1) <*> (showBTree' am t2)
+  where
+    mkSingle st = [st]
+    (a,t1,t2) = unsafeGetElems bt -- bt must not be End
+    shift x t1 t2 = (++ ("|":t2))
+      (zipWith (++)
+        ((x ++ "-") : repeat ("|" ++ replicate (length x) ' ')) t1)
