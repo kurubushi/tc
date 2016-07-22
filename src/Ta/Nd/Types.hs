@@ -20,3 +20,5 @@ data Nd q s = Nd {
   , getFs    :: s q
   , getTrans :: Trans q s
 }
+
+type FollowMemoQ q = Map q (Alphabet,(q,q))

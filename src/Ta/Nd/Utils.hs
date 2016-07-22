@@ -8,7 +8,11 @@ import Ta.Nd.Types
 import Set.Types (StateSet)
 import qualified Set.Types as S
 import qualified Set.Utils as S
+import Data.Map.Lazy (Map)
 import qualified Data.Map.Lazy as Map
+import Control.Monad
+import Control.Applicative
+import Control.Arrow
 
 complete :: (StateSet s, Q q) => s Alphabet -> Nd q s -> Nd q s
 complete as nd
@@ -24,7 +28,7 @@ complete as nd
     qs = getQs nd `S.union` S.fromList [dummyQ]
     addedTrans = S.toMapfoldr S.union (\e -> S.fromList [e]) . S.map (\(a,e) -> ((dummyQ,a), e)) $ unDefines
     unDefines = allCombis `S.difference` defines
-    unDefinesInOriginal = S.filter (\(a,(Expr (q1,q2))) -> q1/=dummyQ && q2 /=dummyQ) unDefines
+    unDefinesInOriginal = S.filter (\(a,Expr (q1,q2)) -> q1/=dummyQ && q2 /=dummyQ) unDefines
     allCombis = as `S.cartesian` S.map Expr (qs `S.cartesian` qs)
     defines = -- :: s (Alphabet,Expr)
       Map.foldrWithKey (\(q,a) es acc -> S.map (a,) es `S.union` acc) S.empty
@@ -75,14 +79,47 @@ isEmpty :: (StateSet s, Q q, Eq (s q)) => Nd q s -> Bool
 isEmpty nd = isEmptyWithQne nd $ getFs nd
 
 isEmptyWithQne :: (StateSet s, Q q, Eq (s q)) => Nd q s -> s q -> Bool
-isEmptyWithQne nd qne
-  | qne == qne' = S.null (qne `S.intersection` getIs nd)
-  | otherwise   = isEmptyWithQne nd qne'
+isEmptyWithQne nd qne = S.null . snd $ isEmptyWithQneFollow nd qne Map.empty
+
+isEmptyWithQneFollow :: (StateSet s, Q q, Eq (s q)) =>
+  Nd q s -> s q -> FollowMemoQ q -> (FollowMemoQ q, s q)
+isEmptyWithQneFollow nd qne memo
+  | qne == qne' || S.notNull reachedQs = (memo', reachedQs)
+  | otherwise = isEmptyWithQneFollow nd qne' memo'
   where
-    qne' = qne `S.union` newQs
-    newQs = S.fromList
-      . map fst
-      . Map.keys
-      . Map.filter (S.notNull . S.filter 
-          (\(Expr (q1,q2)) -> (q1 `S.member` qne) && q2 `S.member` qne))
+    reachedQs = qne' `S.intersection` getIs nd
+    makeKeysSet = S.union (getFs nd) . S.fromList . map fst . Map.keys
+    -- 前のものがあれば更新しない
+    notUpdateFromList memo = Map.unionWith const memo . Map.fromListWith const
+    takeSample = (\(Expr (q1,q2)) -> (q1,q2)) . head . S.toList
+    makeMemo = notUpdateFromList memo
+      . map (\((q,a),es) -> (q, (a,takeSample es)))
+      . Map.toList
+    (qne', memo') = (makeKeysSet &&& makeMemo)
+      . Map.filter S.notNull
+      . Map.map (S.filter (\(Expr (q1,q2)) ->
+          q1 `S.member` qne && q2 `S.member` qne))
       . getTrans $ nd
+
+
+sampleCounterExample :: (StateSet s, Q q) =>
+  Nd q s -> FollowMemoQ q -> q -> Maybe (BTree Alphabet)
+sampleCounterExample nd memo q
+  | q `S.member` getFs nd = Just btEnd
+  | otherwise = makeTree <=< Map.lookup q $ memo
+  where
+    makeTree (a,(q1,q2)) = makeNode a
+      <$> sampleCounterExample nd memo q1
+      <*> sampleCounterExample nd memo q2
+
+-- memo and q must be created by isEmptyWithQneFollow.
+-- isEmptyWithQneFollowで得られたものならば必ず成功するはず
+unsafeSampleCounterExample :: (StateSet s, Q q) =>
+  Nd q s -> FollowMemoQ q -> q -> BTree Alphabet
+unsafeSampleCounterExample nd memo q
+  | q `S.member` getFs nd = btEnd
+  | otherwise = makeTree . (Map.! q) $ memo
+  where
+    makeTree (a,(q1,q2)) = makeNode a
+      (unsafeSampleCounterExample nd memo q1)
+      (unsafeSampleCounterExample nd memo q2)
