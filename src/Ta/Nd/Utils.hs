@@ -88,7 +88,7 @@ isEmptyWithQneFollow nd qne memo
   | otherwise = isEmptyWithQneFollow nd qne' memo'
   where
     reachedQs = qne' `S.intersection` getIs nd
-    makeKeysSet = S.fromList . map fst . Map.keys
+    makeKeysSet = S.union (getFs nd) . S.fromList . map fst . Map.keys
     -- 前のものがあれば更新しない
     notUpdateFromList memo = Map.unionWith const memo . Map.fromListWith const
     takeSample = (\(Expr (q1,q2)) -> (q1,q2)) . head . S.toList
