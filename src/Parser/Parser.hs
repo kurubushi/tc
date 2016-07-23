@@ -103,12 +103,18 @@ tdttRules = mkTransFromSet <$> parseToSetAs "TdttRules" tdttRule
 tdttRule :: Parser (Tdtt.Trans (QD String) Set)
 tdttRule = makeRule
   <$> (spaces *> var) -- p
-  <*> (spaces *> char '(' *> spaces *> (var <|> endAlphabetSt)) -- a --!!!
+  <*> (spaces *> char '(' *> spaces *> tdttAlphabet) -- a
   <*  (spaces *> char ')')
   <*> (spaces *> string "->" *> spaces *> tdttExpr) -- expr
   where
   makeRule p a expr = Map.singleton
-    (makeQ p, makeAlphabet a) (Set.singleton expr)
+    (makeQ p, a) (Set.singleton expr)
+
+tdttAlphabet :: Parser Alphabet
+tdttAlphabet = toAlphabet <$> (endAlphabetSt <|> var)
+  where
+  toAlphabet "#" = endAlphabet
+  toAlphabet a   = makeAlphabet a
 
 tdttExpr :: Parser (Tdtt.Expr (QD String))
 tdttExpr = choice . map try $ [tdttExprA, tdttExprL, tdttExprP]
