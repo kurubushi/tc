@@ -56,7 +56,8 @@ tdttRules = mkTransFromSet <$> parseToSetAs tdttRule "TdttRules"
 tdttRule :: Parser (Tdtt.Trans (QD String) Set)
 tdttRule = makeRule
   <$> (spaces *> var) -- p
-  <*> (spaces *> char '(' *> spaces *> var) -- a
+  <*> (spaces *> char '(' *> spaces *> (var <|> endAlphabetSt)) -- a --!!!
+  <*  (spaces *> char ')')
   <*> (spaces *> string "->" *> spaces *> tdttExpr) -- expr
   where
   makeRule p a expr = Map.singleton
