@@ -1,0 +1,49 @@
+ndFibIn5amari3 = Nd (
+  {q0,q1,q2,q3,q4,qe},
+  {q3},
+  {qe},
+  {q0 -> a(q4,qe),
+   q1 -> a(qe,qe),
+   q1 -> a(q0,qe),
+   q2 -> a(q1,qe),
+   q3 -> a(q2,qe),
+   q4 -> a(q3,qe)}
+)
+
+ndFibOut5amari0 = Nd (
+  {q0,q1,q2,q3,q4},
+  {q0},
+  {q1},
+  {q0 -> a(q0,q0), q0 -> a(q1,q4), q0 -> a(q2,q3), q0 -> a(q3,q2), q0 -> a(q4,q1),
+   q1 -> a(q0,q1), q1 -> a(q1,q0), q1 -> a(q2,q4), q1 -> a(q3,q3), q1 -> a(q4,q2),
+   q2 -> a(q0,q2), q2 -> a(q1,q1), q2 -> a(q2,q0), q2 -> a(q3,q4), q2 -> a(q4,q3),
+   q3 -> a(q0,q3), q3 -> a(q1,q2), q3 -> a(q2,q1), q3 -> a(q3,q0), q3 -> a(q4,q4),
+   q4 -> a(q0,q4), q4 -> a(q1,q3), q4 -> a(q2,q2), q4 -> a(q3,q1),
+q4 -> a(q4,q0)}
+)
+
+ndFibOut5amari4 = Nd (
+  {q0,q1,q2,q3,q4},
+  {q4},
+  {q1},
+  {q0 -> a(q0,q0), q0 -> a(q1,q4), q0 -> a(q2,q3), q0 -> a(q3,q2), q0 -> a(q4,q1),
+   q1 -> a(q0,q1), q1 -> a(q1,q0), q1 -> a(q2,q4), q1 -> a(q3,q3), q1 -> a(q4,q2),
+   q2 -> a(q0,q2), q2 -> a(q1,q1), q2 -> a(q2,q0), q2 -> a(q3,q4), q2 -> a(q4,q3),
+   q3 -> a(q0,q3), q3 -> a(q1,q2), q3 -> a(q2,q1), q3 -> a(q3,q0), q3 -> a(q4,q4),
+   q4 -> a(q0,q4), q4 -> a(q1,q3), q4 -> a(q2,q2), q4 -> a(q3,q1),
+q4 -> a(q4,q0)}
+)
+
+fibAlphabet = Alphabets {a}
+
+tdttFib = Tdtt (
+  {fib, aux},
+  {fib},
+  {fib(a) -> a(fib(1),aux(1)),
+   fib(#) -> #,
+   aux(a) -> fib(1),
+   aux(#) -> #}
+)
+
+typecheck! fibAlphabet fibAlphabet ndFibIn5amari3 ndFibOut5amari4 tdttFib
+typecheck! fibAlphabet fibAlphabet ndFibIn5amari3 ndFibOut5amari0 tdttFib
