@@ -11,12 +11,17 @@ import qualified Data.Map.Lazy as Map
 import Control.Monad.Free (Free(..))
 import Data.Void (Void)
 import Control.Applicative
+import Data.Maybe (fromMaybe)
 
-data Alphabet = Alphabet Integer | AlphabetEnd
-  deriving (Eq, Ord, Show)
+data Alphabet = Alphabet String | AlphabetEnd
+  deriving (Eq, Ord)
 
-makeAlphabet :: Integral a => a -> Alphabet
-makeAlphabet = Alphabet . toInteger
+instance Show Alphabet where
+  show AlphabetEnd   = "#"
+  show (Alphabet st) = st
+
+makeAlphabet :: String -> Alphabet
+makeAlphabet = Alphabet
 
 endAlphabet :: Alphabet
 endAlphabet = AlphabetEnd
@@ -93,16 +98,13 @@ unsafeGetElems :: BTree a -> (a, BTree a, BTree a)
 unsafeGetElems (Free (BTNode' x t1 t2)) = (x, t1, t2)
 
 
-type AlphabetMap = Map Alphabet String
+showBTree :: BTree Alphabet -> Maybe String
+showBTree bt = unlines <$> showBTree' bt
 
-showBTree :: AlphabetMap -> BTree Alphabet -> Maybe String
-showBTree am bt = unlines <$> showBTree' am bt
-
-showBTree' :: AlphabetMap -> BTree Alphabet -> Maybe [String]
-showBTree' am bt
-  | isBTEnd bt = mkSingle <$> Map.lookup endAlphabet am
-  | otherwise  = shift <$> (Map.lookup a am)
-                       <*> (showBTree' am t1) <*> (showBTree' am t2)
+showBTree' :: BTree Alphabet -> Maybe [String]
+showBTree' bt
+  | isBTEnd bt = pure . mkSingle . show $ endAlphabet
+  | otherwise  = shift (show a) <$> (showBTree' t1) <*> (showBTree' t2)
   where
     mkSingle st = [st]
     (a,t1,t2) = unsafeGetElems bt -- bt must not be End
