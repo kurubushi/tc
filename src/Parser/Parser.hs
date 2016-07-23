@@ -172,9 +172,9 @@ endAlphabetSt = string "#"
 states :: Parser (Set (QD String))
 states = Set.map makeQ <$> parseToSet var
 
--- "{a, b}"
+-- "Alphabets {a, b}"
 alphabets :: Parser (Set Alphabet)
-alphabets = Set.map makeAlphabet <$> parseToSet var
+alphabets = Set.map makeAlphabet <$> parseToSetAs "Alphabets" var
 
 
 typecheck :: Parser Exec

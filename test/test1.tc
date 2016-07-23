@@ -28,7 +28,7 @@ ndFibOutOdd = Nd (
    q1 -> a(q1,q0)}
 )
 
-fibAlphabet = {a}
+fibAlphabet = Alphabets {a}
 
 tdttFib = Tdtt (
   {fib, aux},
