@@ -34,9 +34,9 @@ testTypeCheck inputAs outputAs inputNd outputNd tdtt
   (memo, qs) = Nd.isEmptyWithQneFollow testNd (Nd.getFs testNd) Map.empty
 
 ae = endAlphabet
-a0 = makeAlphabet 0
-a1 = makeAlphabet 1
-a2 = makeAlphabet 2
+a0 = makeAlphabet "a0"
+a1 = makeAlphabet "a1"
+a2 = makeAlphabet "a2"
 
 q0 = makeQ 0 :: QInt
 q1 = makeQ 1 :: QInt
@@ -110,8 +110,8 @@ nd_01_out2 = Nd.Nd {
 
 
 
-z = makeAlphabet 0
-s = makeAlphabet 1
+z = makeAlphabet "z"
+s = makeAlphabet "s"
 
 tdtt_02_inA = S.fromList [z, s]
 tdtt_02_outA = S.fromList [z, s]
@@ -226,7 +226,7 @@ fib' = makeQ 1 :: QInt
 -- fib 7 = 34
 -- fib 8 = 55
 
-a = makeAlphabet 0
+a = makeAlphabet "a"
 fibAlphabet = S.fromList [a]
 
 -- フィボナッチ数を計算．2つずれている．
