@@ -1,4 +1,6 @@
-module Parser where
+{-#LANGUAGE TupleSections#-}
+
+module Parser.Parser where
 
 import Text.Parsec
 import Text.ParserCombinators.Parsec.Combinator
@@ -12,16 +14,24 @@ import qualified Ta.Nd.Types as Nd
 import qualified Ta.Nd.Utils as Nd
 import qualified Tt.Tdtt.Types as Tdtt
 import qualified Tt.Tdtt.Utils as Tdtt
+import Data.List (foldl')
 import Control.Monad
 import Control.Applicative ((<$>), (*>), (<*), (<*>))
+import Control.Arrow
 
 type Var = String
 
 type EMap = Map Var Expr
 
 data Expr = EAlphabet (Set Alphabet)
-          | ENd (Nd.Trans (QD String) Set)
-          | ETdtt (Tdtt.Trans (QD String) Set)
+          | ENd (Nd.Nd (QD String) Set)
+          | ETdtt (Tdtt.Tdtt (QD String) Set)
+
+data Exec = Typecheck Var Var Var Var Var
+  deriving (Eq, Ord, Show)
+
+type Program = (EMap,[Exec])
+
 
 
 parseAs :: String -> Parser a -> Parser a
@@ -43,6 +53,10 @@ parseToSetAs tag = parseAs tag . parseToSet
 
 var :: Parser Var
 var = (:) <$> lower <*> many alphaNum
+
+
+ndVar :: Parser (Var, Nd.Nd (QD String) Set)
+ndVar = parseVar nd
 
 -- Nd {states, states, states, rules}
 -- let (Right myNd) = parse nd "" "Nd (States {q0,q1,q2}, States{q2}, States {q0}, NdRules {q2-> a (q0,q0), q2 -> b(q0,q0)})"
@@ -78,6 +92,9 @@ ndRule = makeRule
   makeRule q a q1 q2 = Map.singleton
     (makeQ q, makeAlphabet a) (Set.singleton (Nd.Expr (makeQ q1, makeQ q2)))
 
+
+tdttVar :: Parser (Var, Tdtt.Tdtt (QD String) Set)
+tdttVar = parseVar tdtt
 
 -- Tdtt {states, states, rules}
 -- let (Right myTdtt) = parse tdtt "" "Tdtt (States {fib, aux}, States{fib}, TdttRules {fib(#) -> #, fib(a) -> a(fib(1),aux(1)), aux(#) -> #, aux(a) -> fib(1)})"
@@ -158,3 +175,30 @@ states = Set.map makeQ <$> parseToSetAs "States" var
 -- "Alphabets {a, b}"
 alphabets :: Parser (Set Alphabet)
 alphabets = Set.map makeAlphabet <$> parseToSetAs "Alphabets" var
+
+
+typecheck :: Parser Exec
+typecheck = Typecheck
+  <$> (spaces *> string "typecheck!" *> spaces *> var) -- inputAlphabet
+  <*> (spaces *> var) -- outputAlphabet
+  <*> (spaces *> var) -- inputNd
+  <*> (spaces *> var) -- outputNd
+  <*> (spaces *> var) -- tdtt
+
+program :: Parser Program
+program = foldr union (Map.empty,[]) <$> many program'
+  where
+  union (m1,e1) (m2,e2) = (m1`Map.union`m2, e1++e2)
+
+program' :: Parser Program
+program' = choice . map try $
+  [((,[]) . makeMap . second EAlphabet) <$> parseVar alphabets
+  ,((,[]) . makeMap . second ENd)       <$> ndVar
+  ,((,[]) . makeMap . second ETdtt)     <$> tdttVar
+  ,((Map.empty,) . makeList)            <$> typecheck]
+  where
+  makeMap = uncurry Map.singleton
+  makeList = pure
+
+parseProgram :: String -> Either ParseError Program
+parseProgram = parse program ""

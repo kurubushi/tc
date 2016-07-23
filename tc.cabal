@@ -24,6 +24,7 @@ library
                      , Ta.Ata.Utils
                      , Tt.Tdtt.Types
                      , Tt.Tdtt.Utils
+                     , Parser.Parser
   build-depends:       base >= 4.7 && < 5
                      , containers
                      , semigroups
