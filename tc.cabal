@@ -17,6 +17,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Atom.Types
                      , Set.Types
+                     , Set.Utils
                      , Ta.Nd.Types
                      , Ta.Nd.Utils
                      , Ta.Ata.Types
