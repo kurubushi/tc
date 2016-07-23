@@ -16,7 +16,10 @@ import Control.Applicative ((<$>), (*>), (<*), (<*>))
 
 type Var = String
 
-parseVar :: Ord a => Parser a -> Parser (Var, a)
+parseAs :: String -> Parser a -> Parser a
+parseAs tag p = spaces *> string tag *> spaces *> p
+
+parseVar :: Parser a -> Parser (Var, a)
 parseVar p = (,)
   <$> (spaces *> var)
   <*> (spaces *> string "=" *> p)
@@ -27,32 +30,24 @@ parseToSet p = Set.fromList
        *> spaces *> sepBy (p <* spaces) (colon *> spaces)
        <* spaces <* char '}')
 
-parseToSetAs :: Ord a => Parser a -> String -> Parser (Set a)
-parseToSetAs p st = Set.fromList
-  <$> (spaces *> string st
-       *> spaces *> char '='
-       *> spaces *> char '{'
-       *> spaces *> sepBy (p <* spaces) (colon *> spaces)
-       <* spaces <* char '}')
+parseToSetAs :: Ord a => String -> Parser a -> Parser (Set a)
+parseToSetAs tag = parseAs tag . parseToSet
 
 var :: Parser Var
 var = (:) <$> lower <*> many alphaNum
 
--- NdRules = {q0 -> a(q1,q2), q2 -> a(q2,q2)}
+-- "ndr = NdRules {q0 -> a(q1,q2), q2 -> a(q2,q2)}"
 ndRulesVar :: Parser (Var, Nd.Trans (QD String) Set)
-ndRulesVar = makeTrans
-  <$> (spaces *> string "NdRules" *> spaces *> parseVar (parseToSet ndRule))
-  where
-  makeTrans (v, m) = (v, Set.foldr combine Map.empty m)
-  combine = Map.unionWith Set.union
+ndRulesVar = parseVar ndRules
   
+-- "NdRules {q0 -> a(q1,q2), q2 -> a(q2,q2)}"
 ndRules :: Parser (Nd.Trans (QD String) Set)
-ndRules = mkTransFromSet <$> parseToSetAs ndRule "NdRules"
+ndRules = mkTransFromSet <$> parseToSetAs "NdRules" ndRule
   where
   mkTransFromSet = Set.foldr combine Map.empty
   combine = Map.unionWith Set.union
 
--- q -> a (q1, q2)
+-- "q -> a (q1, q2)"
 ndRule :: Parser (Nd.Trans (QD String) Set)
 ndRule = makeRule
   <$> (spaces *> var) -- q
@@ -65,17 +60,13 @@ ndRule = makeRule
   makeRule q a q1 q2 = Map.singleton
     (makeQ q, makeAlphabet a) (Set.singleton (Nd.Expr (makeQ q1, makeQ q2)))
 
--- TdttRules = {tdttrule, tdttrule}
-tdttRulesVar :: Parser (Var, Nd.Trans (QD String) Set)
-tdttRulesVar = makeTrans
-  <$> (spaces *> string "TdttRules" *> spaces *> parseVar (parseToSet ndRule))
-  where
-  makeTrans (v, m) = (v, Set.foldr combine Map.empty m)
-  combine = Map.unionWith Set.union
+-- "tdttr = TdttRules {p(a) -> b(p1(1),c(p2(2),#)), p(#) -> #}"
+tdttRulesVar :: Parser (Var, Tdtt.Trans (QD String) Set)
+tdttRulesVar = parseVar tdttRules
 
--- TdttRules = {tdttrule, tdttrule}
+-- "TdttRules {p(a) -> b(p1(1),c(p2(2),#)), p(#) -> #}"
 tdttRules :: Parser (Tdtt.Trans (QD String) Set)
-tdttRules = mkTransFromSet <$> parseToSetAs tdttRule "TdttRules"
+tdttRules = mkTransFromSet <$> parseToSetAs "TdttRules" tdttRule
   where
   mkTransFromSet = Set.foldr combine Map.empty
   combine = Map.unionWith Set.union
@@ -126,10 +117,10 @@ endAlphabetSt :: Parser String
 endAlphabetSt = string "#"
 
 
--- States = {q0, q1, q2}
+-- "States {q0, q1, q2}"
 states :: Parser (Set (QD String))
-states = Set.map makeQ <$> parseToSetAs var "States"
+states = Set.map makeQ <$> parseToSetAs "States" var
 
--- Alphabets = {a, b}
+-- "Alphabets {a, b}"
 alphabets :: Parser (Set Alphabet)
-alphabets = Set.map makeAlphabet <$> parseToSetAs var "Alphabets"
+alphabets = Set.map makeAlphabet <$> parseToSetAs "Alphabets" var
