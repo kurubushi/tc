@@ -1,0 +1,51 @@
+ndFibIn3amari1 = Nd (
+    States {q0,q1,q2,qe}
+  , States {q1}
+  , States {qe}
+  , NdRules {
+        q1 -> a(qe,qe)
+      , q1 -> a(q0,qe)
+      , q2 -> a(q1,qe)
+      , q0 -> a(q2,qe)
+    }
+)
+
+ndFibOutEven = Nd (
+    States {q0,q1}
+  , States {q0}
+  , States {q1}
+  , NdRules {
+        q0 -> a(q1,q1)
+      , q0 -> a(q0,q0)
+      , q1 -> a(q0,q1)
+      , q1 -> a(q1,q0)
+    }
+)
+
+ndFibOutOdd = Nd (
+    States {q0,q1}
+  , States {q1}
+  , States {q1}
+  , NdRules {
+        q0 -> a(q1,q1)
+      , q0 -> a(q0,q0)
+      , q1 -> a(q0,q1)
+      , q1 -> a(q1,q0)
+    }
+)
+
+fibAlphabet = Alphabets {a}
+
+tdttFib = Tdtt (
+    States {fib, aux}
+  , States {fib}
+  , TdttRules {
+        fib(a) -> a(fib(1),aux(1))
+      , fib(#) -> #
+      , aux(a) -> fib(1)
+      , aux(#) -> #
+    }
+)
+
+typecheck! fibAlphabet fibAlphabet ndFibIn3amari1 ndFibOutEven tdttFib
+typecheck! fibAlphabet fibAlphabet ndFibIn3amari1 ndFibOutOdd tdttFib
