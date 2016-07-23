@@ -14,6 +14,19 @@ import qualified Tt.Tdtt.Utils as Tdtt
 import Control.Monad
 import Control.Applicative ((<$>), (*>), (<*), (<*>))
 
+type Var = String
+
+parseVar :: Ord a => Parser a -> Parser (Var, a)
+parseVar p = (,)
+  <$> (spaces *> var)
+  <*> (spaces *> string "=" *> p)
+
+parseToSet :: Ord a => Parser a -> Parser (Set a)
+parseToSet p = Set.fromList
+  <$> (spaces *> char '{'
+       *> spaces *> sepBy (p <* spaces) (colon *> spaces)
+       <* spaces <* char '}')
+
 parseToSetAs :: Ord a => Parser a -> String -> Parser (Set a)
 parseToSetAs p st = Set.fromList
   <$> (spaces *> string st
@@ -22,10 +35,17 @@ parseToSetAs p st = Set.fromList
        *> spaces *> sepBy (p <* spaces) (colon *> spaces)
        <* spaces <* char '}')
 
-var :: Parser String
+var :: Parser Var
 var = (:) <$> lower <*> many alphaNum
 
 -- NdRules = {q0 -> a(q1,q2), q2 -> a(q2,q2)}
+ndRulesVar :: Parser (Var, Nd.Trans (QD String) Set)
+ndRulesVar = makeTrans
+  <$> (spaces *> string "NdRules" *> spaces *> parseVar (parseToSet ndRule))
+  where
+  makeTrans (v, m) = (v, Set.foldr combine Map.empty m)
+  combine = Map.unionWith Set.union
+  
 ndRules :: Parser (Nd.Trans (QD String) Set)
 ndRules = mkTransFromSet <$> parseToSetAs ndRule "NdRules"
   where
@@ -44,6 +64,14 @@ ndRule = makeRule
   where
   makeRule q a q1 q2 = Map.singleton
     (makeQ q, makeAlphabet a) (Set.singleton (Nd.Expr (makeQ q1, makeQ q2)))
+
+-- TdttRules = {tdttrule, tdttrule}
+tdttRulesVar :: Parser (Var, Nd.Trans (QD String) Set)
+tdttRulesVar = makeTrans
+  <$> (spaces *> string "TdttRules" *> spaces *> parseVar (parseToSet ndRule))
+  where
+  makeTrans (v, m) = (v, Set.foldr combine Map.empty m)
+  combine = Map.unionWith Set.union
 
 -- TdttRules = {tdttrule, tdttrule}
 tdttRules :: Parser (Tdtt.Trans (QD String) Set)
