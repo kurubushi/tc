@@ -59,7 +59,7 @@ ndVar :: Parser (Var, Nd.Nd (QD String) Set)
 ndVar = parseVar nd
 
 -- Nd {states, states, states, rules}
--- let (Right myNd) = parse nd "" "Nd (States {q0,q1,q2}, States{q2}, States {q0}, NdRules {q2-> a (q0,q0), q2 -> b(q0,q0)})"
+-- let (Right myNd) = parse nd "" "Nd ( {q0,q1,q2}, {q2}, {q0}, {q2-> a (q0,q0), q2 -> b(q0,q0)})"
 nd :: Parser (Nd.Nd (QD String) Set)
 nd = parseAs "Nd" $ Nd.Nd
   <$> (spaces *> char '(' *> spaces *> states) -- Q
@@ -70,11 +70,11 @@ nd = parseAs "Nd" $ Nd.Nd
 
 -- "ndr = NdRules {q0 -> a(q1,q2), q2 -> a(q2,q2)}"
 ndRulesVar :: Parser (Var, Nd.Trans (QD String) Set)
-ndRulesVar = parseVar ndRules
+ndRulesVar = parseVar (parseAs "NdRules" ndRules)
   
--- "NdRules {q0 -> a(q1,q2), q2 -> a(q2,q2)}"
+-- "{q0 -> a(q1,q2), q2 -> a(q2,q2)}"
 ndRules :: Parser (Nd.Trans (QD String) Set)
-ndRules = mkTransFromSet <$> parseToSetAs "NdRules" ndRule
+ndRules = mkTransFromSet <$> parseToSet ndRule
   where
   mkTransFromSet = Set.foldr combine Map.empty
   combine = Map.unionWith Set.union
@@ -97,7 +97,7 @@ tdttVar :: Parser (Var, Tdtt.Tdtt (QD String) Set)
 tdttVar = parseVar tdtt
 
 -- Tdtt {states, states, rules}
--- let (Right myTdtt) = parse tdtt "" "Tdtt (States {fib, aux}, States{fib}, TdttRules {fib(#) -> #, fib(a) -> a(fib(1),aux(1)), aux(#) -> #, aux(a) -> fib(1)})"
+-- let (Right myTdtt) = parse tdtt "" "Tdtt ({fib, aux}, {fib}, {fib(#) -> #, fib(a) -> a(fib(1),aux(1)), aux(#) -> #, aux(a) -> fib(1)})"
 tdtt :: Parser (Tdtt.Tdtt (QD String) Set)
 tdtt = parseAs "Tdtt" $ Tdtt.Tdtt
   <$> (spaces *> char '(' *> spaces *> states) -- P
@@ -107,11 +107,11 @@ tdtt = parseAs "Tdtt" $ Tdtt.Tdtt
 
 -- "tdttr = TdttRules {p(a) -> b(p1(1),c(p2(2),#)), p(#) -> #}"
 tdttRulesVar :: Parser (Var, Tdtt.Trans (QD String) Set)
-tdttRulesVar = parseVar tdttRules
+tdttRulesVar = parseVar (parseAs "TdttRules" tdttRules)
 
--- "TdttRules {p(a) -> b(p1(1),c(p2(2),#)), p(#) -> #}"
+-- "{p(a) -> b(p1(1),c(p2(2),#)), p(#) -> #}"
 tdttRules :: Parser (Tdtt.Trans (QD String) Set)
-tdttRules = mkTransFromSet <$> parseToSetAs "TdttRules" tdttRule
+tdttRules = mkTransFromSet <$> parseToSet tdttRule
   where
   mkTransFromSet = Set.foldr combine Map.empty
   combine = Map.unionWith Set.union
@@ -168,13 +168,13 @@ endAlphabetSt :: Parser String
 endAlphabetSt = string "#"
 
 
--- "States {q0, q1, q2}"
+-- "{q0, q1, q2}"
 states :: Parser (Set (QD String))
-states = Set.map makeQ <$> parseToSetAs "States" var
+states = Set.map makeQ <$> parseToSet var
 
--- "Alphabets {a, b}"
+-- "{a, b}"
 alphabets :: Parser (Set Alphabet)
-alphabets = Set.map makeAlphabet <$> parseToSetAs "Alphabets" var
+alphabets = Set.map makeAlphabet <$> parseToSet var
 
 
 typecheck :: Parser Exec
