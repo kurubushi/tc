@@ -35,18 +35,18 @@ type Program = (EMap,[Exec])
 
 
 parseAs :: String -> Parser a -> Parser a
-parseAs tag p = spaces *> string tag *> spaces *> p
+parseAs tag p = sac *> string tag *> sac *> p
 
 parseVar :: Parser a -> Parser (Var, a)
 parseVar p = (,)
-  <$> (spaces *> var)
-  <*> (spaces *> string "=" *> p)
+  <$> (sac *> var)
+  <*> (sac *> string "=" *> p)
 
 parseToSet :: Ord a => Parser a -> Parser (Set a)
 parseToSet p = Set.fromList
-  <$> (spaces *> char '{'
-       *> spaces *> sepBy (p <* spaces) (colon *> spaces)
-       <* spaces <* char '}')
+  <$> (sac *> char '{'
+       *> sac *> sepBy (p <* sac) (colon *> sac)
+       <* sac <* char '}')
 
 parseToSetAs :: Ord a => String -> Parser a -> Parser (Set a)
 parseToSetAs tag = parseAs tag . parseToSet
@@ -62,11 +62,11 @@ ndVar = parseVar nd
 -- let (Right myNd) = parse nd "" "Nd ( {q0,q1,q2}, {q2}, {q0}, {q2-> a (q0,q0), q2 -> b(q0,q0)})"
 nd :: Parser (Nd.Nd (QD String) Set)
 nd = parseAs "Nd" $ Nd.Nd
-  <$> (spaces *> char '(' *> spaces *> states) -- Q
-  <*> (spaces *> colon *> spaces *> states) -- I
-  <*> (spaces *> colon *> spaces *> states) -- F
-  <*> (spaces *> colon *> spaces *> ndRules) -- Delta
-  <*  spaces <* char ')' <* spaces
+  <$> (sac *> char '(' *> sac *> states) -- Q
+  <*> (sac *> colon *> sac *> states) -- I
+  <*> (sac *> colon *> sac *> states) -- F
+  <*> (sac *> colon *> sac *> ndRules) -- Delta
+  <*  sac <* char ')' <* sac
 
 -- "ndr = NdRules {q0 -> a(q1,q2), q2 -> a(q2,q2)}"
 ndRulesVar :: Parser (Var, Nd.Trans (QD String) Set)
@@ -82,12 +82,12 @@ ndRules = mkTransFromSet <$> parseToSet ndRule
 -- "q -> a (q1, q2)"
 ndRule :: Parser (Nd.Trans (QD String) Set)
 ndRule = makeRule
-  <$> (spaces *> var) -- q
-  <*> (spaces *> string "->" *> spaces *> var) -- a
-  <*> (spaces *> char '(' *> spaces *> var) -- q1
-  <*> (spaces *> colon *> spaces *> var) -- q2
-  <*  (spaces *> char ')')
-  <*  spaces
+  <$> (sac *> var) -- q
+  <*> (sac *> string "->" *> sac *> var) -- a
+  <*> (sac *> char '(' *> sac *> var) -- q1
+  <*> (sac *> colon *> sac *> var) -- q2
+  <*  (sac *> char ')')
+  <*  sac
   where
   makeRule q a q1 q2 = Map.singleton
     (makeQ q, makeAlphabet a) (Set.singleton (Nd.Expr (makeQ q1, makeQ q2)))
@@ -100,10 +100,10 @@ tdttVar = parseVar tdtt
 -- let (Right myTdtt) = parse tdtt "" "Tdtt ({fib, aux}, {fib}, {fib(#) -> #, fib(a) -> a(fib(1),aux(1)), aux(#) -> #, aux(a) -> fib(1)})"
 tdtt :: Parser (Tdtt.Tdtt (QD String) Set)
 tdtt = parseAs "Tdtt" $ Tdtt.Tdtt
-  <$> (spaces *> char '(' *> spaces *> states) -- P
-  <*> (spaces *> colon *> spaces *> states) -- P0
-  <*> (spaces *> colon *> spaces *> tdttRules) -- Pi
-  <*  spaces <* char ')' <* spaces
+  <$> (sac *> char '(' *> sac *> states) -- P
+  <*> (sac *> colon *> sac *> states) -- P0
+  <*> (sac *> colon *> sac *> tdttRules) -- Pi
+  <*  sac <* char ')' <* sac
 
 -- "tdttr = TdttRules {p(a) -> b(p1(1),c(p2(2),#)), p(#) -> #}"
 tdttRulesVar :: Parser (Var, Tdtt.Trans (QD String) Set)
@@ -119,10 +119,10 @@ tdttRules = mkTransFromSet <$> parseToSet tdttRule
 -- p(a) -> b(p1(1),c(p2(2),#)) === p(a(x1,x2) -> b(p1(x1),c(p2(x2),#))
 tdttRule :: Parser (Tdtt.Trans (QD String) Set)
 tdttRule = makeRule
-  <$> (spaces *> var) -- p
-  <*> (spaces *> char '(' *> spaces *> tdttAlphabet) -- a
-  <*  (spaces *> char ')')
-  <*> (spaces *> string "->" *> spaces *> tdttExpr) -- expr
+  <$> (sac *> var) -- p
+  <*> (sac *> char '(' *> sac *> tdttAlphabet) -- a
+  <*  (sac *> char ')')
+  <*> (sac *> string "->" *> sac *> tdttExpr) -- expr
   where
   makeRule p a expr = Map.singleton
     (makeQ p, a) (Set.singleton expr)
@@ -139,22 +139,22 @@ tdttExpr = choice . map try $ [tdttExprA, tdttExprL, tdttExprP]
 
 tdttExprA :: Parser (Tdtt.Expr (QD String))
 tdttExprA = makeExpr
-  <$> (spaces *> var) -- a
-  <*> (spaces *> char '(' *> spaces *> tdttExpr) -- e1
-  <*> (spaces *> colon *> spaces *> tdttExpr) -- e2
-  <*  (spaces *> char ')')
-  <*  spaces
+  <$> (sac *> var) -- a
+  <*> (sac *> char '(' *> sac *> tdttExpr) -- e1
+  <*> (sac *> colon *> sac *> tdttExpr) -- e2
+  <*  (sac *> char ')')
+  <*  sac
   where
   makeExpr a e1 e2 = Tdtt.ExprA (makeAlphabet a) (e1,e2)
 
 tdttExprL :: Parser (Tdtt.Expr (QD String))
-tdttExprL = spaces *> endAlphabetSt *> spaces *> pure Tdtt.ExprL
+tdttExprL = sac *> endAlphabetSt *> sac *> pure Tdtt.ExprL
 
 tdttExprP :: Parser (Tdtt.Expr (QD String))
 tdttExprP = makeExpr
-  <$> (spaces *> var) -- p
-  <*> (spaces *> char '(' *> spaces *> number) -- 1
-  <*  (spaces *> char ')')
+  <$> (sac *> var) -- p
+  <*> (sac *> char '(' *> sac *> number) -- 1
+  <*  (sac *> char ')')
   where
   makeExpr p = Tdtt.ExprP (makeQ p)
 
@@ -166,6 +166,14 @@ number = read <$> many1 digit
 
 endAlphabetSt :: Parser String
 endAlphabetSt = string "#"
+
+-- spaces and comments
+sac :: Parser ()
+sac = skipMany comments *> spaces
+
+comments :: Parser ()
+comments = try $
+  spaces <* string "--" <* skipMany (noneOf "\n") <* char '\n'
 
 
 -- "{q0, q1, q2}"
@@ -179,11 +187,11 @@ alphabets = Set.map makeAlphabet <$> parseToSetAs "Alphabets" var
 
 typecheck :: Parser Exec
 typecheck = Typecheck
-  <$> (spaces *> string "typecheck!" *> spaces *> var) -- inputAlphabet
-  <*> (spaces *> var) -- outputAlphabet
-  <*> (spaces *> var) -- inputNd
-  <*> (spaces *> var) -- outputNd
-  <*> (spaces *> var) -- tdtt
+  <$> (sac *> string "typecheck!" *> sac *> var) -- inputAlphabet
+  <*> (sac *> var) -- outputAlphabet
+  <*> (sac *> var) -- inputNd
+  <*> (sac *> var) -- outputNd
+  <*> (sac *> var) -- tdtt
 
 program :: Parser Program
 program = foldr union (Map.empty,[]) <$> many program'
