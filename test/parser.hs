@@ -26,7 +26,8 @@ main = do
   [filename] <- getArgs
   c <- readFile filename
   let Right (m, execs) = P.parseProgram c
-  mapM_ (exec m) execs
+  mapM_ (\e -> exec m e >> putStrLn "") execs
+  putStrLn "end."
 
 exec :: P.EMap -> P.Exec -> IO ()
 exec m ch@(P.Typecheck iav oav indv ondv tdttv) = do

@@ -99,7 +99,7 @@ unsafeGetElems (Free (BTNode' x t1 t2)) = (x, t1, t2)
 
 
 showBTree :: BTree Alphabet -> String
-showBTree = unlines . showBTree'
+showBTree = init . unlines . showBTree'
 
 showBTree' :: BTree Alphabet -> [String]
 showBTree' bt
