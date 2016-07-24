@@ -1,3 +1,9 @@
+-- fibnacci type check
+--     普通のFib(3x) -> 2y，つまり，
+--     fib(3x+1) -> 2y の検査．
+
+-- 入力3x+1の判定．
+-- 2進んでいるので，Fib(3x)はfib(3x+1)に相当．
 ndFibIn3amari1 = Nd (
   {q0,q1,q2,qe},
   {q1},
@@ -8,6 +14,7 @@ ndFibIn3amari1 = Nd (
    q0 -> a(q2,qe)}
 )
 
+-- 出力2yの判定．
 ndFibOutEven = Nd (
   {q0,q1},
   {q0},
@@ -18,6 +25,7 @@ ndFibOutEven = Nd (
    q1 -> a(q1,q0)}
 )
 
+-- 出力2y+1の判定．
 ndFibOutOdd = Nd (
   {q0,q1},
   {q1},
@@ -30,6 +38,14 @@ ndFibOutOdd = Nd (
 
 fibAlphabet = Alphabets {a}
 
+-- fibnacci.
+-- 入力はaの数，出力は#の数をカウント．
+-- 普通のFib(0)=0に比べて2進んでいる．
+--   fib(0) = 1,  fib(1) = 2
+--   fib(2) = 3,  fib(3) = 5
+--   fib(4) = 8,  fib(5) = 13
+--   fib(6) = 21, fib(7) = 34
+--   fib(8) = 55, fib(9) = 89
 tdttFib = Tdtt (
   {fib, aux},
   {fib},
@@ -39,5 +55,7 @@ tdttFib = Tdtt (
    aux(#) -> #}
 )
 
+-- fib(3x+1) -> 2y+1の検査
 typecheck! fibAlphabet fibAlphabet ndFibIn3amari1 ndFibOutEven tdttFib
+-- fib(3x+1) -> 2yの検査
 typecheck! fibAlphabet fibAlphabet ndFibIn3amari1 ndFibOutOdd tdttFib
