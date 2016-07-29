@@ -1,65 +1,66 @@
 -- fibnacci type check
---     普通のFib(5x) -> 5y，つまり，
---     fib(5x+3) -> 5y の検査．
+--     普通のfib(5x) -> 5y，つまり，
 
--- 入力5x+3の判定．
--- 2進んでいるので，Fib(5x)はfib(5x+3)に相当．
-ndFibIn5amari3 = Nd (
-  {q0,q1,q2,q3,q4,qe},
-  {q3},
-  {qe},
-  {q0 -> a(q4,qe),
-   q1 -> a(qe,qe),
-   q1 -> a(q0,qe),
-   q2 -> a(q1,qe),
-   q3 -> a(q2,qe),
-   q4 -> a(q3,qe)}
+-- 入力5xの判定．
+ndFibIn5amari0 = Nd (
+  {q0,q1,q2,q3,q4},
+  {q0},
+  {q0},
+  {q0 -> a(q4,q0),
+   q1 -> a(q0,q0),
+   q2 -> a(q1,q0),
+   q3 -> a(q2,q0),
+   q4 -> a(q3,q0)}
 )
 
 -- 出力5yの判定．
 ndFibOut5amari0 = Nd (
   {q0,q1,q2,q3,q4},
   {q0},
-  {q1},
-  {q0 -> a(q0,q0), q0 -> a(q1,q4), q0 -> a(q2,q3), q0 -> a(q3,q2), q0 -> a(q4,q1),
-   q1 -> a(q0,q1), q1 -> a(q1,q0), q1 -> a(q2,q4), q1 -> a(q3,q3), q1 -> a(q4,q2),
-   q2 -> a(q0,q2), q2 -> a(q1,q1), q2 -> a(q2,q0), q2 -> a(q3,q4), q2 -> a(q4,q3),
-   q3 -> a(q0,q3), q3 -> a(q1,q2), q3 -> a(q2,q1), q3 -> a(q3,q0), q3 -> a(q4,q4),
-   q4 -> a(q0,q4), q4 -> a(q1,q3), q4 -> a(q2,q2), q4 -> a(q3,q1), q4 -> a(q4,q0)}
+  {q0},
+  {q1 -> a(q0,q0),
+   q0 -> b(q0,q0), q0 -> b(q1,q4), q0 -> b(q2,q3), q0 -> b(q3,q2), q0 -> b(q4,q1),
+   q1 -> b(q0,q1), q1 -> b(q1,q0), q1 -> b(q2,q4), q1 -> b(q3,q3), q1 -> b(q4,q2),
+   q2 -> b(q0,q2), q2 -> b(q1,q1), q2 -> b(q2,q0), q2 -> b(q3,q4), q2 -> b(q4,q3),
+   q3 -> b(q0,q3), q3 -> b(q1,q2), q3 -> b(q2,q1), q3 -> b(q3,q0), q3 -> b(q4,q4),
+   q4 -> b(q0,q4), q4 -> b(q1,q3), q4 -> b(q2,q2), q4 -> b(q3,q1), q4 -> b(q4,q0)}
 )
 
 -- 出力5y+4の判定．
 ndFibOut5amari4 = Nd (
   {q0,q1,q2,q3,q4},
   {q4},
-  {q1},
-  {q0 -> a(q0,q0), q0 -> a(q1,q4), q0 -> a(q2,q3), q0 -> a(q3,q2), q0 -> a(q4,q1),
-   q1 -> a(q0,q1), q1 -> a(q1,q0), q1 -> a(q2,q4), q1 -> a(q3,q3), q1 -> a(q4,q2),
-   q2 -> a(q0,q2), q2 -> a(q1,q1), q2 -> a(q2,q0), q2 -> a(q3,q4), q2 -> a(q4,q3),
-   q3 -> a(q0,q3), q3 -> a(q1,q2), q3 -> a(q2,q1), q3 -> a(q3,q0), q3 -> a(q4,q4),
-   q4 -> a(q0,q4), q4 -> a(q1,q3), q4 -> a(q2,q2), q4 -> a(q3,q1), q4 -> a(q4,q0)}
+  {q0},
+  {q1 -> a(q0,q0),
+   q0 -> b(q0,q0), q0 -> b(q1,q4), q0 -> b(q2,q3), q0 -> b(q3,q2), q0 -> b(q4,q1),
+   q1 -> b(q0,q1), q1 -> b(q1,q0), q1 -> b(q2,q4), q1 -> b(q3,q3), q1 -> b(q4,q2),
+   q2 -> b(q0,q2), q2 -> b(q1,q1), q2 -> b(q2,q0), q2 -> b(q3,q4), q2 -> b(q4,q3),
+   q3 -> b(q0,q3), q3 -> b(q1,q2), q3 -> b(q2,q1), q3 -> b(q3,q0), q3 -> b(q4,q4),
+   q4 -> b(q0,q4), q4 -> b(q1,q3), q4 -> b(q2,q2), q4 -> b(q3,q1), q4 -> b(q4,q0)}
 )
 
-fibAlphabet = Alphabets {a}
+fibInAlphabet = Alphabets {a}
+fibOutAlphabet = Alphabets {a,b}
 
 -- fibnacci.
 -- 入力はaの数，出力は#の数をカウント．
 -- 普通のFib(0)=0に比べて2進んでいる．
---   fib(0) = 1,  fib(1) = 2
---   fib(2) = 3,  fib(3) = 5
---   fib(4) = 8,  fib(5) = 13
---   fib(6) = 21, fib(7) = 34
---   fib(8) = 55, fib(9) = 89
+--   fib(0)  = 0,  fib(1)  = 1
+--   fib(2)  = 1,  fib(3)  = 2
+--   fib(4)  = 3,  fib(5)  = 5
+--   fib(6)  = 8,  fib(7)  = 13
+--   fib(8)  = 21, fib(9)  = 34
+--   fib(10) = 55, fib(11) = 89
 tdttFib = Tdtt (
   {fib, aux},
   {fib},
-  {fib(a) -> a(fib(1),aux(1)),
+  {fib(a) -> b(fib(1),aux(1)),
    fib(#) -> #,
    aux(a) -> fib(1),
-   aux(#) -> #}
+   aux(#) -> a(#,#)}
 )
 
--- fib(5x+3) -> 5y+4の検査
-typecheck! fibAlphabet fibAlphabet ndFibIn5amari3 ndFibOut5amari4 tdttFib
--- fib(5x+3) -> 5yの検査
-typecheck! fibAlphabet fibAlphabet ndFibIn5amari3 ndFibOut5amari0 tdttFib
+-- fib(5x) -> 5y+4の検査
+typecheck! fibInAlphabet fibOutAlphabet ndFibIn5amari0 ndFibOut5amari4 tdttFib
+-- fib(5x) -> 5yの検査
+typecheck! fibInAlphabet fibInAlphabet ndFibIn5amari0 ndFibOut5amari0 tdttFib
