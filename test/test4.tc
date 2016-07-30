@@ -4,7 +4,7 @@ inAs = Alphabets {a,b,error}
 outAs = Alphabets {a,b,error,fix}
 
 -- なんでも受理
-all = Nd (
+all = Bdta (
   {q0},
   {q0},
   {q0},
@@ -14,7 +14,7 @@ all = Nd (
 )
 
 -- errorがない
-errorCheck = Nd (
+errorCheck = Bdta (
   {q0},
   {q0},
   {q0},

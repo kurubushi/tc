@@ -66,7 +66,7 @@ ndVar = parseVar nd
 -- Nd {states, states, states, rules}
 -- let (Right myNd) = parse nd "" "Nd ( {q0,q1,q2}, {q2}, {q0}, {q2-> a (q0,q0), q2 -> b(q0,q0)})"
 nd :: Parser (Nd.Nd (QD String) Set)
-nd = parseAs "Nd" $ Nd.Nd
+nd = parseAs "Bdta" $ Nd.Nd
   <$> (sac *> char '(' *> sac *> states) -- Q
   <*> (sac *> colon *> sac *> states) -- I
   <*> (sac *> colon *> sac *> states) -- F
@@ -75,7 +75,7 @@ nd = parseAs "Nd" $ Nd.Nd
 
 -- "ndr = NdRules {q0 -> a(q1,q2), q2 -> a(q2,q2)}"
 ndRulesVar :: Parser (Var, Nd.Trans (QD String) Set)
-ndRulesVar = parseVar (parseAs "NdRules" ndRules)
+ndRulesVar = parseVar (parseAs "BdtaRules" ndRules)
   
 -- "{q0 -> a(q1,q2), q2 -> a(q2,q2)}"
 ndRules :: Parser (Nd.Trans (QD String) Set)
@@ -104,7 +104,7 @@ tdttVar = parseVar tdtt
 -- Tdtt {states, states, rules}
 -- let (Right myTdtt) = parse tdtt "" "Tdtt ({fib, aux}, {fib}, {fib(#) -> #, fib(a) -> a(fib(1),aux(1)), aux(#) -> #, aux(a) -> fib(1)})"
 tdtt :: Parser (Tdtt.Tdtt (QD String) Set)
-tdtt = parseAs "Tdtt" $ Tdtt.Tdtt
+tdtt = parseAs "TDTT" $ Tdtt.Tdtt
   <$> (sac *> char '(' *> sac *> states) -- P
   <*> (sac *> colon *> sac *> states) -- P0
   <*> (sac *> colon *> sac *> tdttRules) -- Pi

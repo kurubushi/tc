@@ -2,7 +2,7 @@
 --     普通のfib(5x) -> 5y，つまり，
 
 -- 入力5xの判定．
-ndFibIn5amari0 = Nd (
+ndFibIn5amari0 = Bdta (
   {q0,q1,q2,q3,q4},
   {q0},
   {q0},
@@ -14,7 +14,7 @@ ndFibIn5amari0 = Nd (
 )
 
 -- 出力5yの判定．
-ndFibOut5amari0 = Nd (
+ndFibOut5amari0 = Bdta (
   {q0,q1,q2,q3,q4},
   {q0},
   {q0},
@@ -27,7 +27,7 @@ ndFibOut5amari0 = Nd (
 )
 
 -- 出力5y+4の判定．
-ndFibOut5amari4 = Nd (
+ndFibOut5amari4 = Bdta (
   {q0,q1,q2,q3,q4},
   {q4},
   {q0},

@@ -4,7 +4,7 @@ inAs = Alphabets {a0,a1}
 outAs = Alphabets {a0,a1,a2}
 
 -- なんでも受理するオートマトン
-all = Nd (
+all = Bdta (
   {q0},
   {q0},
   {q0},
@@ -14,7 +14,7 @@ all = Nd (
 )
 
 -- a1だけを受理しないオートマトン
-nota1 = Nd (
+nota1 = Bdta (
   {q0},
   {q0},
   {q0},
@@ -23,7 +23,7 @@ nota1 = Nd (
 )
 
 -- a2だけを受理しないオートマトン
-nota2 = Nd (
+nota2 = Bdta (
   {q0},
   {q0},
   {q0},
