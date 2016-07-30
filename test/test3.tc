@@ -1,7 +1,7 @@
 -- 非決定的なTDTTのテスト
 
-inAs = Alphabets {a0,a1}
-outAs = Alphabets {a0,a1,a2}
+inA = Alphabets {a0,a1}
+outA = Alphabets {a0,a1,a2}
 
 -- なんでも受理するオートマトン
 all = Bdta (
@@ -45,6 +45,6 @@ maybeInc = Tdtt (
 
 
 -- a0,a1,a2の二分木をmaybeIncしたらa2がないか検査
-typecheck! maybeInc : all(inAs) -> nota2(outAs)
+typecheck! maybeInc : all(inA) -> nota3(outA)
 -- a0,a2の二分木をmaybeIncしたらa2がないか検査
-typecheck! maybeInc : nota1(inAs) -> nota2(outAs)
+typecheck! maybeInc : nota1(inA) -> nota2(outA)

@@ -1,5 +1,5 @@
 -- fibnacci type check
---     普通のfib(5x) -> 5y，つまり，
+--     fib(5x) -> 5y
 
 -- 入力5xの判定．
 in5x = Bdta (
@@ -14,22 +14,9 @@ in5x = Bdta (
 )
 
 -- 出力5yの判定．
-out5y = Bdta (
+out5x = Bdta (
   {q0,q1,q2,q3,q4},
   {q0},
-  {q0},
-  {q1 -> a(q0,q0),
-   q0 -> b(q0,q0), q0 -> b(q1,q4), q0 -> b(q2,q3), q0 -> b(q3,q2), q0 -> b(q4,q1),
-   q1 -> b(q0,q1), q1 -> b(q1,q0), q1 -> b(q2,q4), q1 -> b(q3,q3), q1 -> b(q4,q2),
-   q2 -> b(q0,q2), q2 -> b(q1,q1), q2 -> b(q2,q0), q2 -> b(q3,q4), q2 -> b(q4,q3),
-   q3 -> b(q0,q3), q3 -> b(q1,q2), q3 -> b(q2,q1), q3 -> b(q3,q0), q3 -> b(q4,q4),
-   q4 -> b(q0,q4), q4 -> b(q1,q3), q4 -> b(q2,q2), q4 -> b(q3,q1), q4 -> b(q4,q0)}
-)
-
--- 出力5y+4の判定．
-out5y4 = Bdta (
-  {q0,q1,q2,q3,q4},
-  {q4},
   {q0},
   {q1 -> a(q0,q0),
    q0 -> b(q0,q0), q0 -> b(q1,q4), q0 -> b(q2,q3), q0 -> b(q3,q2), q0 -> b(q4,q1),
@@ -54,13 +41,11 @@ outA = Alphabets {a,b}
 fib = Tdtt (
   {fib, aux},
   {fib},
-  {fib(a) -> b(fib(1),aux(1)),
+  {fib(a) -> b(fib(1),b(aux(1),#)),
    fib(#) -> #,
    aux(a) -> fib(1),
    aux(#) -> a(#,#)}
 )
 
--- fib(5x) -> 5y+4の検査
-typecheck! fib : in5x(inA) -> out5y4(outA)
 -- fib(5x) -> 5yの検査
-typecheck! fib : in5x(inA) -> out5y4(outA)
+typecheck! fib : in5x(inA) -> out5x(outA)

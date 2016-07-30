@@ -1,7 +1,7 @@
 -- 文字を削除していくTDTT
 
-inAs = Alphabets {a,b,error}
-outAs = Alphabets {a,b,error,fix}
+inA = Alphabets {a,b,error}
+outA = Alphabets {a,b,error,fix}
 
 -- なんでも受理
 all = Bdta (
@@ -47,5 +47,5 @@ delErrorT = Tdtt (
    delError(#)     -> #}
 )
 
-typecheck! delErrorW : all(inAs) -> errorCheck(outAs)
-typecheck! delErrorT : all(inAs) -> errorCheck(outAs)
+typecheck! delErrorW : all(inA) -> errorCheck(outA)
+typecheck! delErrorT : all(inA) -> errorCheck(outA)

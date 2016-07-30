@@ -12,6 +12,28 @@ in3x = Bdta (
    q0 -> a(q2,q0)}
 )
 
+-- 入力3x+1の判定．
+in3x1 = Bdta (
+  {q0,q1,q2},
+  {q1},
+  {q0},
+  {q1 -> a(q0,q0),
+   q1 -> a(q0,q0),
+   q2 -> a(q1,q0),
+   q0 -> a(q2,q0)}
+)
+
+-- 入力3x+2の判定．
+in3x2 = Bdta (
+  {q0,q1,q2},
+  {q2},
+  {q0},
+  {q1 -> a(q0,q0),
+   q1 -> a(q0,q0),
+   q2 -> a(q1,q0),
+   q0 -> a(q2,q0)}
+)
+
 -- 出力2yの判定．
 outEven = Bdta (
   {q0,q1},
@@ -56,7 +78,9 @@ fib = Tdtt (
    aux(#) -> a(#,#)}
 )
 
--- fib(3x) -> 2y+1の検査
-typecheck! fib : in3x(inA) -> outOdd(outA)
 -- fib(3x) -> 2yの検査
 typecheck! fib : in3x(inA) -> outEven(outA)
+-- fib(3x+1) -> 2yの検査
+typecheck! fib : in3x1(inA) -> outEven(outA)
+-- fib(3x1+2) -> 2yの検査
+typecheck! fib : in3x2(inA) -> outEven(outA)
