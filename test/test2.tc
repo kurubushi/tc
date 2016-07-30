@@ -61,6 +61,6 @@ tdttFib = Tdtt (
 )
 
 -- fib(5x) -> 5y+4の検査
---typecheck! tdttFib : ndFibIn5amari0(fibInAlphabet) -> ndFibOut5amari4(fibOutAlphabet)
+typecheck! tdttFib : ndFibIn5amari0(fibInAlphabet) -> ndFibOut5amari4(fibOutAlphabet)
 -- fib(5x) -> 5yの検査
 typecheck! tdttFib : ndFibIn5amari0(fibInAlphabet) -> ndFibOut5amari0(fibOutAlphabet)

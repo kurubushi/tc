@@ -104,7 +104,7 @@ tdttVar = parseVar tdtt
 -- Tdtt {states, states, rules}
 -- let (Right myTdtt) = parse tdtt "" "Tdtt ({fib, aux}, {fib}, {fib(#) -> #, fib(a) -> a(fib(1),aux(1)), aux(#) -> #, aux(a) -> fib(1)})"
 tdtt :: Parser (Tdtt.Tdtt (QD String) Set)
-tdtt = parseAs "TDTT" $ Tdtt.Tdtt
+tdtt = parseAs "Tdtt" $ Tdtt.Tdtt
   <$> (sac *> char '(' *> sac *> states) -- P
   <*> (sac *> colon *> sac *> states) -- P0
   <*> (sac *> colon *> sac *> tdttRules) -- Pi
