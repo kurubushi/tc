@@ -45,6 +45,6 @@ maybeInc = Tdtt (
 
 
 -- a0,a1,a2の二分木をmaybeIncしたらa2がないか検査
-typecheck! inAs outAs all nota2 maybeInc
+typecheck! maybeInc : all(inAs) -> nota2(outAs)
 -- a0,a2の二分木をmaybeIncしたらa2がないか検査
-typecheck! inAs outAs nota1 nota2 maybeInc
+typecheck! maybeInc : nota1(inAs) -> nota2(outAs)

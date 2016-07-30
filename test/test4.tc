@@ -47,5 +47,5 @@ delErrorT = Tdtt (
    delError(#)     -> #}
 )
 
-typecheck! inAs outAs all errorCheck delErrorW
-typecheck! inAs outAs all errorCheck delErrorT
+typecheck! delErrorW : all(inAs) -> errorCheck(outAs)
+typecheck! delErrorT : all(inAs) -> errorCheck(outAs)

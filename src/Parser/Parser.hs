@@ -28,7 +28,12 @@ data Expr = EAlphabet (Set Alphabet)
           | ETdtt (Tdtt.Tdtt (QD String) Set)
 
 data Exec = Typecheck Var Var Var Var Var
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord)
+
+instance Show Exec where
+  show (Typecheck tdtt ind ias ond oas) =
+    "typecheck! " ++ tdtt ++ " : " ++
+    ind ++ "(" ++ ias ++ ") -> " ++ ond ++ "(" ++ oas ++ ")"
 
 type Program = (EMap,[Exec])
 
@@ -187,11 +192,12 @@ alphabets = Set.map makeAlphabet <$> parseToSetAs "Alphabets" var
 
 typecheck :: Parser Exec
 typecheck = Typecheck
-  <$> (sac *> string "typecheck!" *> sac *> var) -- inputAlphabet
-  <*> (sac *> var) -- outputAlphabet
-  <*> (sac *> var) -- inputNd
-  <*> (sac *> var) -- outputNd
-  <*> (sac *> var) -- tdtt
+  <$> (sac *> string "typecheck!" *> sac *> var) -- tdtt
+  <*> (sac *> char ':' *> sac *> var) -- inputNd
+  <*> (sac *> char '(' *> sac *> var) -- inputAlphabet
+  <*> (sac *> char ')' *> sac *> string "->" *> sac *> var) --outputNd
+  <*> (sac *> char '(' *> sac *> var) -- outputAlphabet
+  <*  (sac *> char ')')
 
 program :: Parser Program
 program = foldr union (Map.empty,[]) <$> many program'

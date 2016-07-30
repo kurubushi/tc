@@ -31,7 +31,7 @@ main = do
   putStrLn "end."
 
 exec :: P.EMap -> P.Exec -> IO ()
-exec m ch@(P.Typecheck iav oav indv ondv tdttv) = do
+exec m ch@(P.Typecheck tdttv indv iav ondv oav) = do
   putStr "Start!: "
   print ch
   putStrLn $ "\ttestNd stateset size: " ++ show size

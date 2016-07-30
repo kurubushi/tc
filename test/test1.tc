@@ -57,6 +57,6 @@ tdttFib = Tdtt (
 )
 
 -- fib(3x) -> 2y+1の検査
-typecheck! fibInAlphabet fibOutAlphabet ndFibIn3amari0 ndFibOutEven tdttFib
+typecheck! tdttFib : ndFibIn3amari0(fibInAlphabet) -> ndFibOutEven(fibOutAlphabet)
 -- fib(3x) -> 2yの検査
-typecheck! fibInAlphabet fibOutAlphabet ndFibIn3amari0 ndFibOutOdd tdttFib
+typecheck! tdttFib : ndFibIn3amari0(fibInAlphabet) -> ndFibOutOdd(fibOutAlphabet)
