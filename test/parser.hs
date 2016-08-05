@@ -1,11 +1,15 @@
 {-#LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-#LANGUAGE FlexibleContexts#-}
 
 import System.Environment
 import System.IO
 import Atom.Types
 import Control.Monad
 import System.IO.Unsafe
+import Control.Monad.IO.Class (liftIO, MonadIO)
+import Control.Monad.Catch
+import Control.Monad.Except (runExceptT)
 import qualified Parser.Parser as P
 import Ta.Ata.Types (Ata(..))
 import qualified Ta.Ata.Types as Ata
@@ -26,40 +30,24 @@ main :: IO ()
 main = do
   [filename] <- getArgs
   c <- readFile filename
-  let Right (m, execs) = P.parseProgram c
-  mapM_ (\e -> exec m e >> putStrLn "") execs
+  case P.parseProgram c of
+    Right (m, execs) -> mapM_ (\e -> exec m e >> putStrLn "") execs
+    Left e -> print e
   putStrLn "end."
 
-exec :: P.EMap -> P.Exec -> IO ()
-exec m ch@(P.Typecheck tdttv indv iav ondv oav) = do
+exec :: P.EMaps -> P.Exec -> IO ()
+exec ms ch = do
   putStr "Start!: "
   print ch
-  putStrLn $ "\ttestNd stateset size: " ++ show size
-  (maybe
-    (putStrLn "True")
-    (\t -> putStrLn "False. A counter example is,"
-      >> putStrLn (showBTree t))
-    mt)
-  where
-  (P.EAlphabet ia) = m Map.! iav
-  (P.EAlphabet oa) = m Map.! oav
-  (P.ENd ind) = m Map.! indv
-  (P.ENd ond) = m Map.! ondv
-  (P.ETdtt tdtt) = m Map.! tdttv
-  (size, mt) = testTypeCheck ia oa ind ond tdtt
+  case P.execTest ms ch of
+    Left e -> putStrLn $ errorMsg e
+    Right (size, mt) -> do
+      putStrLn $ "\ttestNd stateset size: " ++ show size
+      (maybe
+       (putStrLn "True")
+       (\t -> putStrLn "False. A counter example is,"
+         >> putStrLn (showBTree t))
+       mt)
 
-testTypeCheck :: forall p q1 q2 q3 q4 q5.
-  (Q p, Q q1, Q q2,
-   q3 ~ QD (p,q2),
-   q4 ~ QD (Set q3),
-   q5 ~ QD (q1,q4)) =>
-   Set Alphabet -> Set Alphabet -> Nd q1 Set -> Nd q2 Set -> Tdtt p Set -> (Int, Maybe (BTree Alphabet))
-testTypeCheck inputAs outputAs inputNd outputNd tdtt
-  | S.null qs = (testNdSize, Nothing)
-  | otherwise = (testNdSize, Nd.sampleCounterExample testNd memo (head . S.toList $ qs))
-  where
-  inferAta = Tdtt.infer inputAs outputAs tdtt outputNd :: Ata q3 Set
-  inferNd = Ata.toNd inputAs inferAta :: Nd q4 Set
-  testNd = inputNd `Nd.intersection` inferNd :: Nd q5 Set
-  testNdSize = S.size $ Nd.getQs testNd
-  (memo, qs) = Nd.isEmptyWithQneFollow testNd (Nd.getFs testNd) Map.empty
+errorMsg :: P.ProgramError -> String
+errorMsg pe = "Error!: " ++ P.reson pe

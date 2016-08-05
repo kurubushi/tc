@@ -1,4 +1,5 @@
 {-#LANGUAGE TupleSections#-}
+{-#LANGUAGE FlexibleContexts#-}
 
 module Parser.Parser where
 
@@ -18,10 +19,25 @@ import Data.List (foldl')
 import Control.Monad
 import Control.Applicative ((<$>), (*>), (<*), (<*>))
 import Control.Arrow
+import Control.Monad.Except
+import Data.Semigroup
 
 type Var = String
 
-type EMap = Map Var Expr
+data EMaps = EMaps {
+    mapAs   :: Map Var (Set Alphabet)
+  , mapNd   :: Map Var (Nd.Nd (QD String) Set)
+  , mapTdtt :: Map Var (Tdtt.Tdtt (QD String) Set)
+}
+
+instance Semigroup EMaps where
+  m1 <> m2 = EMaps {
+      mapAs = mapAs m1 `Map.union` mapAs m2
+    , mapNd = mapNd m1 `Map.union` mapNd m2
+    , mapTdtt = mapTdtt m1 `Map.union` mapTdtt m2
+  }
+
+emptyEMaps = EMaps Map.empty Map.empty Map.empty
 
 data Expr = EAlphabet (Set Alphabet)
           | ENd (Nd.Nd (QD String) Set)
@@ -35,7 +51,11 @@ instance Show Exec where
     "typecheck! " ++ tdtt ++ " : " ++
     ind ++ "(" ++ ias ++ ") -> " ++ ond ++ "(" ++ oas ++ ")"
 
-type Program = (EMap,[Exec])
+type Program = (EMaps,[Exec])
+
+data ProgramError = ProgramError {reson :: String}
+                  | NoVar {reson :: String}
+  deriving Show
 
 
 
@@ -200,19 +220,37 @@ typecheck = Typecheck
   <*  (sac *> char ')')
 
 program :: Parser Program
-program = foldr union (Map.empty,[]) <$> many program'
+program = foldr union (emptyEMaps,[]) <$> many program'
   where
-  union (m1,e1) (m2,e2) = (m1`Map.union`m2, e1++e2)
+  union (m1,e1) (m2,e2) = (m1<>m2, e1++e2)
 
 program' :: Parser Program
 program' = choice . map try $
-  [((,[]) . makeMap . second EAlphabet) <$> parseVar alphabets
-  ,((,[]) . makeMap . second ENd)       <$> ndVar
-  ,((,[]) . makeMap . second ETdtt)     <$> tdttVar
-  ,((Map.empty,) . makeList)            <$> typecheck]
+  [makeAlphabets <$> parseVar alphabets
+  ,makeNd        <$> ndVar
+  ,makeTdtt      <$> tdttVar
+  ,makeTypecheck <$> typecheck]
   where
+  makeAlphabets as = (emptyEMaps {mapAs= makeMap as},[])
+  makeNd nd        = (emptyEMaps {mapNd= makeMap nd},[])
+  makeTdtt tdtt    = (emptyEMaps {mapTdtt= makeMap tdtt},[])
+  makeTypecheck tc = (emptyEMaps, [tc])
   makeMap = uncurry Map.singleton
-  makeList = pure
 
 parseProgram :: String -> Either ParseError Program
 parseProgram = parse program ""
+
+lookupE :: (Show k, Ord k, MonadError ProgramError m) =>
+  k -> Map k v -> m v
+lookupE k m = maybe
+  (throwError . NoVar $ "no such var: " ++ show k)
+  return $ k `Map.lookup` m
+
+execTest :: MonadError ProgramError m => EMaps -> Exec -> m (Int, Maybe (BTree Alphabet))
+execTest maps ch@(Typecheck tdttv indv iav ondv oav) = 
+  Tdtt.testTypeCheck
+    <$> iav `lookupE` mapAs maps
+    <*> oav `lookupE` mapAs maps
+    <*> indv `lookupE` mapNd maps
+    <*> ondv `lookupE` mapNd maps
+    <*> tdttv `lookupE` mapTdtt maps
