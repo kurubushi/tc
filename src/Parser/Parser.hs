@@ -20,6 +20,7 @@ import Control.Monad
 import Control.Applicative ((<$>), (*>), (<*), (<*>))
 import Control.Arrow
 import Control.Monad.Except
+import Control.Monad.Catch (Exception)
 import Data.Semigroup
 
 type Var = String
@@ -56,6 +57,9 @@ type Program = (EMaps,[Exec])
 data ProgramError = ProgramError {reson :: String}
                   | NoVar {reson :: String}
   deriving Show
+
+instance Exception ProgramError
+instance Exception ParseError
 
 
 
