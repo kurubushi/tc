@@ -15,7 +15,7 @@ deriving instance Eq p => Eq (Expr p)
 deriving instance Ord p => Ord (Expr p)
 deriving instance Show p => Show (Expr p)
 
-type Trans p s = Map (p, Alphabet) (s (Expr p))
+type Trans p s = p -> Alphabet -> (s (Expr p))
 
 data Tdtt p s = Tdtt {
     getPs    :: s p

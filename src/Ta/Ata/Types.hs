@@ -18,7 +18,7 @@ deriving instance Eq q => Eq (Expr q)
 deriving instance Ord q => Ord (Expr q)
 deriving instance Show q => Show (Expr q)
 
-type Trans q = Map (q, Alphabet) (Expr q)
+type Trans q = q -> Alphabet -> Expr q
 
 data Ata q s = Ata {
     getQs    :: s q

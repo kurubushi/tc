@@ -27,13 +27,14 @@ inf nd ExprL q
   | otherwise = Ata.ExprBottom
 inf nd (ExprA a (e1,e2)) q =
   maybe Ata.ExprBottom (Ata.foldrExprOrWith infAndinf)
-  . findExpr (q, a)
-  . Nd.getTrans $ nd
+  $ findExpr (q, a)
   where
     findExpr (q, a)
-      | isEnd a = const Nothing
-      | otherwise = Map.lookup (q, a)
-    infAndinf (Nd.Expr (q1,q2)) = inf nd e1 q1 `Ata.ExprAnd` inf nd e2 q2
+      | isEnd a = Nothing
+      | otherwise = Just 
+                    . S.filter (\e -> q `S.member` (Nd.getTrans nd) e a)
+                    $ Nd.getQs nd `S.cartesian` Nd.getQs nd
+    infAndinf (q1,q2) = inf nd e1 q1 `Ata.ExprAnd` inf nd e2 q2
 inf nd (ExprP p n) q = Ata.ExprCond n (makeQ (p,q))
 
 
@@ -42,29 +43,22 @@ infer :: forall s p q q'. (StateSet s, Q p, Q q, Q q', QElem q' ~ (p,q)) =>
 infer inputAs outputAs tdtt nd = Ata {
     Ata.getQs = S.map conv qs
   , Ata.getIs = S.map conv is
-  , Ata.getFs = S.map conv
-      . S.fromList -- using List becase s (Expr a q) is not Ord.
-      . map (\(q,((p,_),_)) -> (p,q))
-      . filter (\(q,(_,es)) -> (Ata.isTop :: Ata.Expr q' -> Bool)
-          . Ata.foldrExprOrWith (\e -> inf ndc e q) $ es)
-      . S.cartesian (S.toList . Nd.getQs $ ndc) -- :: [(q, ((p,a), s (Expr a p)))]
-      . Map.toList -- :: [((p,a), s (Expr a p))]
-      . Map.filterWithKey (\(_,a) _ -> isEnd a)
-      . Tdtt.getTrans $ tdtt
-  , Ata.getTrans = S.toMap
-      . S.map (\((p,q),a) -> ((conv (p,q),a),)
-          . Ata.foldrExprOrWith (\e -> inf ndc e q)
-          . findExpr (p,a)
-          . Tdtt.getTrans $ tdtt)
-      . S.cartesian qs $ inputAs
+  , Ata.getFs =
+      S.map conv
+      . S.filter (\(p,q) -> (Ata.isTop :: Ata.Expr q' -> Bool)
+                              . Ata.foldrExprOrWith (\e -> inf ndc e q)
+                              $ (Tdtt.getTrans tdtt) p endAlphabet)
+      $ Tdtt.getPs tdtt `S.cartesian` Nd.getQs ndc
+  , Ata.getTrans = \q' a ->
+      fromMaybe Ata.ExprBottom 
+        $ (\(p,q) ->
+           Ata.foldrExprOrWith (\e -> inf ndc e q) $ (Tdtt.getTrans tdtt) p a)
+          <$> getQ q'
 }
   where
     conv = makeQ
     qs = S.cartesian (getPs tdtt) (Nd.getQs ndc)
     is = S.cartesian (getP0 tdtt) (Nd.getIs ndc)
-    findExpr (p,a)
-      | isEnd a   = const (S.fromList [])
-      | otherwise = Map.findWithDefault (S.fromList []) (p,a)
     ndc = Nd.complement outputAs nd
 
 
@@ -75,7 +69,7 @@ typecheck :: forall p q1 q2 s q3 q4 q5.
    Q q5, q5 ~ QD (q1,q4),
    Ord (s q3), Eq (s q5)) =>
   s Alphabet -> s Alphabet -> Nd q1 s -> Nd q2 s -> Tdtt p s -> Bool
-typecheck inputAs outputAs inputNd outputNd tdtt = Nd.isEmpty testNd
+typecheck inputAs outputAs inputNd outputNd tdtt = Nd.isEmpty outputAs testNd
   where
     inferAta = infer inputAs outputAs tdtt outputNd :: Ata q3 s
     inferNd = Ata.toNd inputAs inferAta :: Nd q4 s
