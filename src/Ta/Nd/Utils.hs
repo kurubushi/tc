@@ -21,18 +21,18 @@ complete as nd
       getQs = qs
     , getIs = getIs nd
     , getFs = getFs nd
-    , getTrans = getTrans nd `Map.union` addedTrans
+    , getTrans = tr
   }
   where
     dummyQ = takeNewQ (getQs nd)
     qs = getQs nd `S.union` S.fromList [dummyQ]
-    addedTrans = S.toMapfoldr S.union (\e -> S.fromList [e]) . S.map (\(a,e) -> ((dummyQ,a), e)) $ unDefines
-    unDefines = allCombis `S.difference` defines
-    unDefinesInOriginal = S.filter (\(a,Expr (q1,q2)) -> q1/=dummyQ && q2 /=dummyQ) unDefines
-    allCombis = as `S.cartesian` S.map Expr (qs `S.cartesian` qs)
-    defines = -- :: s (Alphabet,Expr)
-      Map.foldrWithKey (\(q,a) es acc -> S.map (a,) es `S.union` acc) S.empty
-      . getTrans $ nd
+    tr (q1,q2) a
+      | q1==dummyQ || q2==dummyQ = S.fromList [dummyQ]
+      | otherwise = (getTrans nd) (q1,q2) a
+    unDefinesInOriginal = S.filter (\(a,(q1,q2)) -> q1/=dummyQ && q2 /=dummyQ) unDefines
+    unDefines = -- :: s (Alphabet,Expr)
+      S.filter (\(a,e) -> S.null $ (getTrans nd) e a)
+      $ as `S.cartesian` (qs `S.cartesian` qs)
 
 
 complement :: (StateSet s, Q q) => s Alphabet -> Nd q s -> Nd q s
@@ -51,55 +51,38 @@ intersection nd1 nd2 = Nd {
     getQs = S.map conv qs
   , getIs = S.map conv is
   , getFs = S.map conv fs
-  , getTrans = Map.fromList
-      . map (\((q,p),a) -> ((conv (q,p),a),) 
-        . S.map (Expr . convPair . mix)
-        $ S.cartesian (relA (q,a) nd1) (relA (p,a) nd2))
-      . S.toList
-      . S.cartesian qs $ as
+  , getTrans = undefined
 }
   where
     conv = makeQ
     qs = S.cartesian (getQs nd1) (getQs nd2)
     is = S.cartesian (getIs nd1) (getIs nd2)
     fs = S.cartesian (getFs nd1) (getFs nd2)
-    as = S.map snd keys1 `S.intersection` S.map snd keys2
-    keys1 = S.fromList . Map.keys . getTrans $ nd1
-    keys2 = S.fromList . Map.keys . getTrans $ nd2
-    relA :: (Ord q, StateSet s) => (q,Alphabet) -> Nd q s -> s (q,q)
-    relA key = S.map (\(Expr qpair) -> qpair)
-      . Map.findWithDefault S.empty key
-      . getTrans
-    mix :: ((a,a),(b,b)) -> ((a,b),(a,b))
-    mix ((x1,x2),(y1,y2)) = ((x1,y1),(x2,y2))
-    convPair (x,y) = (conv x, conv y)
+    trans' (q1,q2) a = S.map conv $ tr1 q1 a `S.cartesian` tr2 q2 a
+    tr1 = getTrans nd1
+    tr2 = getTrans nd2
 
 
-isEmpty :: (StateSet s, Q q, Eq (s q)) => Nd q s -> Bool
-isEmpty nd = isEmptyWithQne nd $ getFs nd
+isEmpty :: (StateSet s, Q q, Eq (s q)) => s Alphabet -> Nd q s -> Bool
+isEmpty as nd = isEmptyWithQne as nd $ getFs nd
 
-isEmptyWithQne :: (StateSet s, Q q, Eq (s q)) => Nd q s -> s q -> Bool
-isEmptyWithQne nd qne = S.null . snd $ isEmptyWithQneFollow nd qne Map.empty
+isEmptyWithQne :: (StateSet s, Q q, Eq (s q)) => s Alphabet -> Nd q s -> s q -> Bool
+isEmptyWithQne as nd qne = S.null . snd $ isEmptyWithQneFollow as nd qne Map.empty
 
 isEmptyWithQneFollow :: (StateSet s, Q q, Eq (s q)) =>
-  Nd q s -> s q -> FollowMemoQ q -> (FollowMemoQ q, s q)
-isEmptyWithQneFollow nd qne memo
+  s Alphabet -> Nd q s -> s q -> FollowMemoQ q -> (FollowMemoQ q, s q)
+isEmptyWithQneFollow as nd qne memo
   | qne == qne' || S.notNull reachedQs = (memo', reachedQs)
-  | otherwise = isEmptyWithQneFollow nd qne' memo'
+  | otherwise = isEmptyWithQneFollow as nd qne' memo'
   where
     reachedQs = qne' `S.intersection` getIs nd
-    makeKeysSet = S.union (getFs nd) . S.fromList . map fst . Map.keys
-    -- 前のものがあれば更新しない
-    notUpdateFromList memo = Map.unionWith const memo . Map.fromListWith const
-    takeSample = (\(Expr (q1,q2)) -> (q1,q2)) . head . S.toList
-    makeMemo = notUpdateFromList memo
-      . map (\((q,a),es) -> (q, (a,takeSample es)))
-      . Map.toList
-    (qne', memo') = (makeKeysSet &&& makeMemo)
-      . Map.filter S.notNull
-      . Map.map (S.filter (\(Expr (q1,q2)) ->
-          q1 `S.member` qne && q2 `S.member` qne))
-      . getTrans $ nd
+    add = Map.unionWith const
+    makeQne = S.foldr (\(a,e) acc -> acc `S.union` trans e a) S.empty
+    makeMemo = S.foldr (\(a,e) acc -> acc `add` makeMemoSub a e) memo
+    makeMemoSub a e = S.foldr (\q acc -> acc `add` Map.singleton q (a,e)) Map.empty (trans e a)
+    (qne', memo') = (makeQne &&& makeMemo)
+      $ as `S.cartesian` (qne `S.cartesian` qne)
+    trans = getTrans nd
 
 
 sampleCounterExample :: (StateSet s, Q q) =>
