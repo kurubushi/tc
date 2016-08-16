@@ -13,6 +13,7 @@ import qualified Data.Map.Lazy as Map
 import Control.Monad
 import Control.Applicative
 import Control.Arrow
+import Data.Maybe (fromMaybe)
 
 complete :: (StateSet s, Q q) => s Alphabet -> Nd q s -> Nd q s
 complete as nd
@@ -51,14 +52,18 @@ intersection nd1 nd2 = Nd {
     getQs = S.map conv qs
   , getIs = S.map conv is
   , getFs = S.map conv fs
-  , getTrans = undefined
+  , getTrans = \(q1,q2) a ->
+      fromMaybe S.empty $ trans' <$> getQ q1 <*> getQ q2 <*> pure a
+
 }
   where
     conv = makeQ
     qs = S.cartesian (getQs nd1) (getQs nd2)
     is = S.cartesian (getIs nd1) (getIs nd2)
     fs = S.cartesian (getFs nd1) (getFs nd2)
-    trans' (q1,q2) a = S.map conv $ tr1 q1 a `S.cartesian` tr2 q2 a
+    trans' (q11,q12) (q21,q22) a =
+      S.map conv $ tr1 (q11,q21) a `S.cartesian` tr2 (q12,q22) a
+
     tr1 = getTrans nd1
     tr2 = getTrans nd2
 
