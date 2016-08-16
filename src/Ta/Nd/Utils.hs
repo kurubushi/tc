@@ -29,6 +29,7 @@ complete as nd
     qs = getQs nd `S.union` S.fromList [dummyQ]
     tr (q1,q2) a
       | q1==dummyQ || q2==dummyQ = S.fromList [dummyQ]
+      | S.null $ (getTrans nd) (q1,q2) a = S.fromList [dummyQ]
       | otherwise = (getTrans nd) (q1,q2) a
     unDefinesInOriginal = S.filter (\(a,(q1,q2)) -> q1/=dummyQ && q2 /=dummyQ) unDefines
     unDefines = -- :: s (Alphabet,Expr)
