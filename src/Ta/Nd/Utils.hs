@@ -82,7 +82,7 @@ isEmptyWithQneFollow as nd qne memo
   where
     reachedQs = qne' `S.intersection` getIs nd
     add = Map.unionWith const
-    makeQne = S.foldr (\(a,e) acc -> acc `S.union` trans e a) S.empty
+    makeQne = S.foldr (\(a,e) acc -> acc `S.union` trans e a) qne
     makeMemo = S.foldr (\(a,e) acc -> acc `add` makeMemoSub a e) memo
     makeMemoSub a e = S.foldr (\q acc -> acc `add` Map.singleton q (a,e)) Map.empty (trans e a)
     (qne', memo') = (makeQne &&& makeMemo)
