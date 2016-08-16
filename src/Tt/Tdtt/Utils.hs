@@ -26,14 +26,12 @@ inf nd ExprL q
   | q `S.member` Nd.getFs nd = Ata.ExprTop
   | otherwise = Ata.ExprBottom
 inf nd (ExprA a (e1,e2)) q =
-  maybe Ata.ExprBottom (Ata.foldrExprOrWith infAndinf)
-  $ findExpr (q, a)
+  Ata.foldrExprOrWith infAndinf $ findExpr (q, a)
   where
     findExpr (q, a)
-      | isEnd a = Nothing
-      | otherwise = Just 
-                    . S.filter (\e -> q `S.member` (Nd.getTrans nd) e a)
-                    $ Nd.getQs nd `S.cartesian` Nd.getQs nd
+      | isEnd a = S.empty
+      | otherwise = S.filter (\e -> q `S.member` (Nd.getTrans nd) e a)
+                      $ Nd.getQs nd `S.cartesian` Nd.getQs nd
     infAndinf (q1,q2) = inf nd e1 q1 `Ata.ExprAnd` inf nd e2 q2
 inf nd (ExprP p n) q = Ata.ExprCond n (makeQ (p,q))
 
