@@ -1,0 +1,51 @@
+-- 文字を削除していくTDTT
+
+inA = Alphabets {a,b,error}
+outA = Alphabets {a,b,error,fix}
+
+-- なんでも受理
+all = Bdta (
+  {q0},
+  {q0},
+  {q0},
+  {q0 -> a(q0,q0),
+   q0 -> b(q0,q0),
+   q0 -> error(q0,q0)}
+)
+
+-- errorがない
+errorCheck = Bdta (
+  {q0},
+  {q0},
+  {q0},
+  {q0 -> a(q0,q0),
+   q0 -> b(q0,q0),
+   q0 -> fix(q0,q0)}
+)
+
+--errorを削除するまちがったTDTT
+delErrorW = Tdtt (
+  {delError,id},
+  {delError},
+  {delError(a)     -> a(delError(1),delError(2)),
+   delError(b)     -> b(delError(1),delError(2)),
+   delError(error) -> fix(delError(1),id(2)),--wrong line!
+   delError(#)     -> #,
+   id(a)           -> a(id(1),id(2)),
+   id(b)           -> b(id(1),id(2)),
+   id(error)       -> error(id(1),id(2)),
+   id(#)           -> #}
+)
+
+--errorを削除する正しいTDTT
+delErrorT = Tdtt (
+  {delError},
+  {delError},
+  {delError(a)     -> a(delError(1),delError(2)),
+   delError(b)     -> b(delError(1),delError(2)),
+   delError(error) -> fix(delError(1),delError(2)),
+   delError(#)     -> #}
+)
+
+typecheck! delErrorW : all(inA) -> errorCheck(outA)
+typecheck! delErrorT : all(inA) -> errorCheck(outA)

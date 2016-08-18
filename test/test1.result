@@ -1,0 +1,15 @@
+Start!: Typecheck "fibInAlphabet" "fibOutAlphabet" "ndFibIn3amari0" "ndFibOutOdd" "tdttFib"
+	testNd stateset size: 192
+False. A counter example is,
+#
+
+end.
+./parser test1.tc  0.01s user 0.00s system 76% cpu 0.013 total
+
+
+Start!: Typecheck "fibInAlphabet" "fibOutAlphabet" "ndFibIn3amari0" "ndFibOutEven" "tdttFib"
+	testNd stateset size: 192
+True
+
+end.
+./parser test1.tc  0.01s user 0.01s system 95% cpu 0.014 total
