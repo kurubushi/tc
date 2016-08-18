@@ -73,8 +73,7 @@ toNd as ata = Nd.Nd {
   , Nd.getIs = S.map conv is
   , Nd.getFs = S.map conv fs
   , Nd.getTrans = \(q1,q2) a -> single . conv . fromMaybe S.empty
-      $ (\s1 s2 -> S.filter (\q -> (s1,s2) `dash` (getTrans ata) q a) $ getQs ata)
-        <$> getQ q1 <*> getQ q2
+      $ mkQSet a <$> getQ q1 <*> getQ q2
 }
   where
     conv = makeQ
@@ -82,3 +81,5 @@ toNd as ata = Nd.Nd {
     is = S.filter (\s -> S.notNull (s `S.intersection` getIs ata)) qs
     fs = S.fromList [getFs ata]
     single x = S.fromList [x]
+    mkQSet a s1 s2 =
+      S.filter (\q -> (s1,s2) `dash` (getTrans ata) q a) $ getQs ata

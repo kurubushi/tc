@@ -76,7 +76,7 @@ isEmptyWithQne as nd qne = S.null . snd $ isEmptyWithQneFollow as nd qne Map.emp
 isEmptyWithQneFollow :: (StateSet s, Q q, Eq (s q)) =>
   s Alphabet -> Nd q s -> s q -> FollowMemoQ q -> (FollowMemoQ q, s q)
 isEmptyWithQneFollow as nd qne memo
-  | qne == qne' || S.notNull reachedQs = (memo', reachedQs)
+  | S.notNull reachedQs || qne == qne' = (memo', reachedQs)
   | otherwise = isEmptyWithQneFollow as nd qne' memo'
   where
     reachedQs = qne' `S.intersection` getIs nd

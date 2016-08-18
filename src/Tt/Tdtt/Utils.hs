@@ -43,21 +43,22 @@ infer inputAs outputAs tdtt nd = Ata {
   , Ata.getIs = S.map conv is
   , Ata.getFs =
       S.map conv
-      . S.filter (\(p,q) -> (Ata.isTop :: Ata.Expr q' -> Bool)
-                              . Ata.foldrExprOrWith (\e -> inf ndc e q)
-                              $ (Tdtt.getTrans tdtt) p endAlphabet)
+      . S.filter (isTop . makeExprCond)
       $ Tdtt.getPs tdtt `S.cartesian` Nd.getQs ndc
   , Ata.getTrans = \q' a ->
       fromMaybe Ata.ExprBottom 
-        $ (\(p,q) ->
-           Ata.foldrExprOrWith (\e -> inf ndc e q) $ (Tdtt.getTrans tdtt) p a)
-          <$> getQ q'
+        $ makeTransExpr a <$> getQ q'
 }
   where
     conv = makeQ
     qs = S.cartesian (getPs tdtt) (Nd.getQs ndc)
     is = S.cartesian (getP0 tdtt) (Nd.getIs ndc)
     ndc = Nd.complement outputAs nd
+    makeExprCond (p,q) = Ata.foldrExprOrWith (\e -> inf ndc e q)
+      $ (Tdtt.getTrans tdtt) p endAlphabet
+    isTop = Ata.isTop :: Ata.Expr q' -> Bool
+    makeTransExpr a (p,q) = Ata.foldrExprOrWith (\e -> inf ndc e q)
+      $ (Tdtt.getTrans tdtt) p a
 
 
 typecheck :: forall p q1 q2 s q3 q4 q5.
