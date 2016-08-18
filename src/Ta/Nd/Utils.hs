@@ -27,8 +27,7 @@ complete as nd
   where
     dummyQ = takeNewQ (getQs nd)
     qs = getQs nd `S.union` S.fromList [dummyQ]
-    tr (q1,q2) a
-      | q1==dummyQ || q2==dummyQ = S.fromList [dummyQ]
+    tr (q1,q2) a -- returns {dummyQ} if raw trans gets S.empty
       | S.null $ (getTrans nd) (q1,q2) a = S.fromList [dummyQ]
       | otherwise = (getTrans nd) (q1,q2) a
     unDefinesInOriginal = S.filter (\(a,(q1,q2)) -> q1/=dummyQ && q2 /=dummyQ) unDefines
