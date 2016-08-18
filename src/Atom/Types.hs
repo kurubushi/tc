@@ -105,13 +105,13 @@ unsafeGetElems :: BTree a -> (a, BTree a, BTree a)
 unsafeGetElems (Free (BTNode' x t1 t2)) = (x, t1, t2)
 
 
-showBTree :: BTree Alphabet -> Maybe String
-showBTree bt = unlines <$> showBTree' bt
+showBTree :: BTree Alphabet -> String
+showBTree = init . unlines . showBTree'
 
-showBTree' :: BTree Alphabet -> Maybe [String]
+showBTree' :: BTree Alphabet -> [String]
 showBTree' bt
-  | isBTEnd bt = pure . mkSingle . show $ endAlphabet
-  | otherwise  = shift (show a) <$> (showBTree' t1) <*> (showBTree' t2)
+  | isBTEnd bt = mkSingle . show $ endAlphabet
+  | otherwise  = shift (show a) (showBTree' t1) (showBTree' t2)
   where
     mkSingle st = [st]
     (a,t1,t2) = unsafeGetElems bt -- bt must not be End

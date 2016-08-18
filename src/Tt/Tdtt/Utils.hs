@@ -19,6 +19,7 @@ import Ta.Nd.Types (Nd(..))
 import qualified Ta.Nd.Types as Nd
 import qualified Ta.Nd.Utils as Nd
 import Data.Maybe (fromMaybe)
+import Data.Set (Set)
 
 inf :: (StateSet s, Q p, Q q, Q q', QElem q' ~ (p,q)) =>
   Nd q s -> Expr p -> q -> Ata.Expr q'
@@ -73,3 +74,20 @@ typecheck inputAs outputAs inputNd outputNd tdtt = Nd.isEmpty outputAs testNd
     inferAta = infer inputAs outputAs tdtt outputNd :: Ata q3 s
     inferNd = Ata.toNd inputAs inferAta :: Nd q4 s
     testNd = inputNd `Nd.intersection` inferNd :: Nd q5 s
+
+
+testTypeCheck :: forall p q1 q2 q3 q4 q5.
+  (Q p, Q q1, Q q2,
+   q3 ~ QD (p,q2),
+   q4 ~ QD (Set q3),
+   q5 ~ QD (q1,q4)) =>
+   Set Alphabet -> Set Alphabet -> Nd q1 Set -> Nd q2 Set -> Tdtt p Set -> (Int, Maybe (BTree Alphabet))
+testTypeCheck inputAs outputAs inputNd outputNd tdtt
+  | S.null qs = (testNdSize, Nothing)
+  | otherwise = (testNdSize, Nd.sampleCounterExample testNd memo (head . S.toList $ qs))
+  where
+  inferAta = infer inputAs outputAs tdtt outputNd :: Ata q3 Set
+  inferNd = Ata.toNd inputAs inferAta :: Nd q4 Set
+  testNd = inputNd `Nd.intersection` inferNd :: Nd q5 Set
+  testNdSize = S.size $ Nd.getQs testNd
+  (memo, qs) = Nd.isEmptyWithQneFollow outputAs testNd (Nd.getFs testNd) Map.empty
