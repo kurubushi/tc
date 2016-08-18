@@ -24,11 +24,15 @@ library
                      , Ta.Ata.Utils
                      , Tt.Tdtt.Types
                      , Tt.Tdtt.Utils
+                     , Parser.Parser
   build-depends:       base >= 4.7 && < 5
+                     , mtl
                      , containers
                      , semigroups
                      , free
                      , transformers
+                     , parsec
+                     , exceptions
   default-language:    Haskell2010
 
 executable tc-exe
