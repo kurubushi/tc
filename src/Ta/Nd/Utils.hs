@@ -30,10 +30,9 @@ complete as nd
     tr (q1,q2) a -- returns {dummyQ} if raw trans gets S.empty
       | S.null $ (getTrans nd) (q1,q2) a = S.fromList [dummyQ]
       | otherwise = (getTrans nd) (q1,q2) a
-    unDefinesInOriginal = S.filter (\(a,(q1,q2)) -> q1/=dummyQ && q2 /=dummyQ) unDefines
-    unDefines = -- :: s (Alphabet,Expr)
+    unDefinesInOriginal = -- :: s (Alphabet,Expr)
       S.filter (\(a,e) -> S.null $ (getTrans nd) e a)
-      $ as `S.cartesian` (qs `S.cartesian` qs)
+      $ as `S.cartesian` ((getQs nd) `S.cartesian` (getQs nd))
 
 
 complement :: (StateSet s, Q q) => s Alphabet -> Nd q s -> Nd q s
