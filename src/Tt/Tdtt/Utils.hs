@@ -90,4 +90,4 @@ testTypeCheck inputAs outputAs inputNd outputNd tdtt
   inferNd = Ata.toNd inputAs inferAta :: Nd q4 Set
   testNd = inputNd `Nd.intersection` inferNd :: Nd q5 Set
   testNdSize = S.size $ Nd.getQs testNd
-  (memo, qs) = Nd.isEmptyWithQneFollow testNd (Nd.getFs testNd) Map.empty
+  (memo, qs) = Nd.isEmptyWithQneFollow outputAs testNd (Nd.getFs testNd) Map.empty
