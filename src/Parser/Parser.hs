@@ -15,6 +15,8 @@ import qualified Ta.Nd.Types as Nd
 import qualified Ta.Nd.Utils as Nd
 import qualified Tt.Tdtt.Types as Tdtt
 import qualified Tt.Tdtt.Utils as Tdtt
+import qualified Ta.Ata.Types as Ata
+import qualified Ta.Ata.Utils as Ata
 import Data.List (foldl')
 import Control.Monad
 import Control.Applicative ((<$>), (*>), (<*), (<*>))
@@ -103,13 +105,14 @@ ndRulesVar = parseVar (parseAs "BdtaRules" ndRules)
   
 -- "{q0 -> a(q1,q2), q2 -> a(q2,q2)}"
 ndRules :: Parser (Nd.Trans (QD String) Set)
-ndRules = mkTransFromSet <$> parseToSet ndRule
+ndRules = toTrans . mkTransFromSet <$> parseToSet ndRule
   where
+  toTrans m q a = Map.findWithDefault Set.empty (q,a) m
   mkTransFromSet = Set.foldr combine Map.empty
   combine = Map.unionWith Set.union
 
 -- "q -> a (q1, q2)"
-ndRule :: Parser (Nd.Trans (QD String) Set)
+ndRule :: Parser (Map (Nd.Expr (QD String), Alphabet) (Set (QD String)))
 ndRule = makeRule
   <$> (sac *> var) -- q
   <*> (sac *> string "->" *> sac *> var) -- a
@@ -119,7 +122,7 @@ ndRule = makeRule
   <*  sac
   where
   makeRule q a q1 q2 = Map.singleton
-    (makeQ q, makeAlphabet a) (Set.singleton (Nd.Expr (makeQ q1, makeQ q2)))
+    ((makeQ q1, makeQ q2), makeAlphabet a) (Set.singleton (makeQ q))
 
 
 tdttVar :: Parser (Var, Tdtt.Tdtt (QD String) Set)
@@ -140,13 +143,14 @@ tdttRulesVar = parseVar (parseAs "TdttRules" tdttRules)
 
 -- "{p(a) -> b(p1(1),c(p2(2),#)), p(#) -> #}"
 tdttRules :: Parser (Tdtt.Trans (QD String) Set)
-tdttRules = mkTransFromSet <$> parseToSet tdttRule
+tdttRules = toTrans . mkTransFromSet <$> parseToSet tdttRule
   where
+  toTrans m q a = Map.findWithDefault Set.empty (q,a) m
   mkTransFromSet = Set.foldr combine Map.empty
   combine = Map.unionWith Set.union
 
 -- p(a) -> b(p1(1),c(p2(2),#)) === p(a(x1,x2) -> b(p1(x1),c(p2(x2),#))
-tdttRule :: Parser (Tdtt.Trans (QD String) Set)
+tdttRule :: Parser (Map (QD String, Alphabet) (Set (Tdtt.Expr (QD String))))
 tdttRule = makeRule
   <$> (sac *> var) -- p
   <*> (sac *> char '(' *> sac *> tdttAlphabet) -- a

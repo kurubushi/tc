@@ -37,6 +37,11 @@ isNotEnd = not . isEnd
 class Ord q => Q q where
   type QElem q
   makeQ :: QElem q -> q
+  getQ :: q -> Maybe (QElem q)
+  isPacked :: q -> Bool
+  isPacked q = case (getQ q) of
+    Nothing -> False
+    _       -> True
   convertMap :: StateSet s => s q -> (q -> Maybe QInt)
   unsafeConvertMap :: StateSet s => s q -> (q -> QInt)
   takeNewQ :: StateSet s => s q -> q
@@ -52,6 +57,8 @@ type QInt = QD Int
 instance Ord a => Q (QD a) where
   type QElem (QD a) = a
   makeQ = QD
+  getQ (NewQ _) = Nothing
+  getQ (QD x) = Just x
   convertMap qs q =fmap makeQ
     . Map.lookup q
     . Map.fromList

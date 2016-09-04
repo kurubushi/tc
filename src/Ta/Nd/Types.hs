@@ -6,13 +6,9 @@ module Ta.Nd.Types where
 import Atom.Types
 import Data.Map.Lazy (Map)
 
-data Expr q where
-  Expr :: Q q => (q, q) -> Expr q
-deriving instance Eq q => Eq (Expr q)
-deriving instance Ord q => Ord (Expr q)
-deriving instance Show q => Show (Expr q)
+type Expr q = (q, q)
 
-type Trans q s = Map (q, Alphabet) (s (Expr q))
+type Trans q s = Expr q -> Alphabet -> s q
 
 data Nd q s = Nd {
     getQs    :: s q
@@ -21,4 +17,4 @@ data Nd q s = Nd {
   , getTrans :: Trans q s
 }
 
-type FollowMemoQ q = Map q (Alphabet,(q,q))
+type FollowMemoQ q = Map q (Alphabet,Expr q)

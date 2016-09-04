@@ -2,7 +2,7 @@ module Set.Types where
 
 import qualified Prelude
 import Prelude hiding (
-  null, filter, map)
+  null, filter, map, foldr)
 import qualified Data.Set as S
 import qualified Data.List as L
 
@@ -20,6 +20,7 @@ class Foldable s => StateSet s where
   difference :: Ord a => s a -> s a -> s a
   cartesian :: s a -> s b -> s (a,b)
   map :: Ord b => (a -> b) -> s a -> s b
+  foldr :: (a -> b -> b) -> b -> s a -> b
   filter :: (a -> Bool) -> s a -> s a
   powerset :: Ord a => s a -> s (s a)
   fromList :: Ord a => [a] -> s a
@@ -37,6 +38,7 @@ instance StateSet S.Set where
   cartesian xs ys = S.fromDistinctAscList -- is safe
     [(x, y) | x <- S.toAscList xs, y <- S.toAscList ys]
   map = S.map
+  foldr = S.foldr
   filter = S.filter
   powerset = S.fromList . map S.fromList . powerset . S.toAscList
   fromList = S.fromList
@@ -53,6 +55,7 @@ instance StateSet [] where
   difference xs ys = [x | x <- xs, x `notElem` ys]
   cartesian xs ys = [(x, y) | x <- xs, y <- ys]
   map = Prelude.map
+  foldr = Prelude.foldr
   filter = Prelude.filter
   powerset = L.subsequences
   fromList = id
