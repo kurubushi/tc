@@ -67,3 +67,21 @@ stack install
 ```bash
 $HOME/.local/bin/tc +RTS -P -RTS test/test1.tc
 ```
+
+
+
+
+## source
+
+次のような構成である．
+
+* src ライブラリが詰っている．
+    * src/Atom 状態や木など基本的な型とその関数．
+    * src/Parser 型検査のための外部DSLのパーサの実装．
+    * src/Set 集合を意味するStateSetの定義とその関数．
+    * src/Ta 木オートマトンに関する定義
+        * src/Ta/Ata Alternating Tree Automatonに関する型と関数．
+        * src/Ta/Nd Tree Automatonに関する型と関数．
+    * src/Tt 木トランスデューサに関する定義
+* app メイン関数が詰っている．
+* test 型検査器tcに与えられるサンプルプログラム．
